@@ -28,7 +28,11 @@ public class App
         System.out.println("starting to analyze:");
         NeoAnalyzer analyzer = new NeoAnalyzer();
         
+        long start = System.currentTimeMillis();
         List<String> res = analyzer.analyze(g);
+        long end = System.currentTimeMillis();
+        
+        System.out.println("duration: " + (end - start));
         
         for(String nodeProps : res){
         	System.out.println(nodeProps);
