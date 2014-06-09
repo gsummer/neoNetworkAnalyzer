@@ -28,6 +28,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.tooling.GlobalGraphOperations;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.AverageShortestPath;
 
 public class NeoAnalyzerNeo4jAlgos implements NeoAnalyzer {
 
