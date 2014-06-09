@@ -17,7 +17,7 @@ public class NeoAnalyzerExt extends ServerPlugin {
 	{
 		List<String> result = null;
 		
-		NeoAnalyzer analyzer = new NeoAnalyzer();
+		NeoAnalyzer analyzer = new NeoAnalyzerHandAlgos();
 		result = analyzer.analyze(graph);
 		
 		return result;
