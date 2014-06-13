@@ -39,17 +39,6 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 			RelationshipType[] types = Iterables.toArray(RelationshipType.class,GlobalGraphOperations.at(graph).getAllRelationshipTypes());
 
-			//			SingleSourceShortestPath<Double> sssPath = new SingleSourceShortestPathDijkstra<Double>( 0.0, null,
-			//					new CostEvaluator<Double>()
-			//					{
-			//				public Double getCost( Relationship relationship,
-			//						Direction direction )
-			//				{
-			//					return 1.0;
-			//				}
-			//					}, new org.neo4j.graphalgo.impl.util.DoubleAdder(),
-			//					new org.neo4j.graphalgo.impl.util.DoubleComparator(),
-			//					Direction.BOTH,  types);
 			SingleSourceShortestPathBFS sssPath = new SingleSourceShortestPathBFS(null, Direction.BOTH, types);
 			
 			Set<Node> allNodes = new HashSet<Node>();
@@ -57,11 +46,8 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 			// this is to check isolated nodes and not calculate certain parameters for it
 			// because they null point: Eccentricity and Closeness
 			for(Node n : (GlobalGraphOperations.at(graph).getAllNodes())){
-				Iterable<Relationship> rels  = n.getRelationships();
-				long edgecount = Iterables.count(rels);
-				if(edgecount != 0)
-					allNodes.add(n);
-					
+//				if(n.getDegree() > 0)
+					allNodes.add(n);	
 			}
 			
 			double normFactor = computeNormFactor(allNodes.size());
@@ -82,15 +68,15 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 							return c / d.intValue();
 						}
 					} );
-			AverageShortestPath<Integer> avgSP = new AverageShortestPath<Integer>(sssPath, allNodes);
+//			AverageShortestPath<Integer> avgSP = new AverageShortestPath<Integer>(sssPath, allNodes);
 
-			ParallellCentralityCalculation<Integer> ppc = new ParallellCentralityCalculation<>(sssPath, allNodes);
-			ppc.addCalculation(stressCentrality);
-			ppc.addCalculation(eccentricity);
-			ppc.addCalculation(betweennessCentrality);
-			ppc.addCalculation(closenessCentrality);
-			ppc.addCalculation(avgSP);
-			ppc.calculate();	
+//			ParallellCentralityCalculation<Integer> ppc = new ParallellCentralityCalculation<>(sssPath, allNodes);
+//			ppc.addCalculation(stressCentrality);
+//			ppc.addCalculation(eccentricity);
+//			ppc.addCalculation(betweennessCentrality);
+//			ppc.addCalculation(closenessCentrality);
+////			ppc.addCalculation(avgSP);
+//			ppc.calculate();	
 
 			for(Node node : GlobalGraphOperations.at(graph).getAllNodes()){
 				Map<String, Object> stats = new HashMap<String,Object>();
@@ -112,12 +98,12 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 					double betweenness = betweennessCentrality.getCentrality(node) * normFactor;
 
-					stats.put("neo_name", node.getProperty("name"));
+					stats.put("neo_name", node.getProperty("name","unknown"));
 					stats.put("neo_betweenness", betweenness * 2);
-					stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
-					stats.put("neo_closenesscentrality", closenessCentrality.getCentrality(node));
-					stats.put("neo_eccentriticy", eccentricity.getCentrality(node));
-					stats.put("neo_avgSP", avgSP.getCentrality(node));
+//					stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
+//					stats.put("neo_closenesscentrality", closenessCentrality.getCentrality(node));
+//					stats.put("neo_eccentriticy", eccentricity.getCentrality(node));
+//					stats.put("neo_avgSP", avgSP.getCentrality(node));
 
 					//Node Properties:
 					//AverageShortestPathLength
