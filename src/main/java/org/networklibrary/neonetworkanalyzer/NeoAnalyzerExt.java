@@ -8,6 +8,7 @@ import org.neo4j.server.plugins.Name;
 import org.neo4j.server.plugins.PluginTarget;
 import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeoAnalyzerImpl;
 
 public class NeoAnalyzerExt extends ServerPlugin {
 	@Name( "analyze" )
@@ -17,7 +18,7 @@ public class NeoAnalyzerExt extends ServerPlugin {
 	{
 		List<String> result = null;
 		
-		NeoAnalyzer analyzer = new NeoAnalyzerHandAlgos();
+		NeoAnalyzer analyzer = new NeoAnalyzerImpl();
 		result = analyzer.analyze(graph);
 		
 		return result;

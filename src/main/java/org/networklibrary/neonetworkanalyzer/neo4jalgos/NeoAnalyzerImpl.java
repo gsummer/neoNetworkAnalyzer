@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer;
+package org.networklibrary.neonetworkanalyzer.neo4jalgos;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,9 +28,9 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.tooling.GlobalGraphOperations;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.AverageShortestPath;
+import org.networklibrary.neonetworkanalyzer.NeoAnalyzer;
 
-public class NeoAnalyzerNeo4jAlgos implements NeoAnalyzer {
+public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 	public List<String> analyze(GraphDatabaseService graph) {
 		List<String> res = new ArrayList<String>();

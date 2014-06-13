@@ -5,6 +5,7 @@ import java.util.List;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeoAnalyzerImpl;
 
 /**
  * Hardcoded test space!!
@@ -32,7 +33,7 @@ public class App
 //        GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(full);
         
         System.out.println("starting to analyze:");
-        NeoAnalyzerNeo4jAlgos analyzer = new NeoAnalyzerNeo4jAlgos();
+        NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl();
         
         long start = System.currentTimeMillis();
         List<String> res = analyzer.analyze(g);
