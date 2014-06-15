@@ -12,11 +12,10 @@ import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphalgo.impl.centrality.BetweennessCentrality;
-import org.neo4j.graphalgo.impl.centrality.ClosenessCentrality;
-import org.neo4j.graphalgo.impl.centrality.CostDivider;
 import org.neo4j.graphalgo.impl.centrality.Eccentricity;
 import org.neo4j.graphalgo.impl.centrality.ParallellCentralityCalculation;
 import org.neo4j.graphalgo.impl.centrality.StressCentrality;
+import org.neo4j.graphalgo.impl.shortestpath.SingleSourceShortestPath;
 import org.neo4j.graphalgo.impl.shortestpath.SingleSourceShortestPathBFS;
 import org.neo4j.graphalgo.impl.util.IntegerAdder;
 import org.neo4j.graphalgo.impl.util.IntegerComparator;
@@ -39,7 +38,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 			RelationshipType[] types = Iterables.toArray(RelationshipType.class,GlobalGraphOperations.at(graph).getAllRelationshipTypes());
 
-			SingleSourceShortestPathBFS sssPath = new SingleSourceShortestPathBFS(null, Direction.BOTH, types);
+			SingleSourceShortestPath sssPath = new SingleSourceShortestPathBFS(null, Direction.BOTH, types);
 			
 			Set<Node> allNodes = new HashSet<Node>();
 			
@@ -53,30 +52,45 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 			double normFactor = computeNormFactor(allNodes.size());
 
 			BetweennessCentrality<Integer> betweennessCentrality = new BetweennessCentrality<Integer>(sssPath, allNodes );
+			
 			StressCentrality<Integer> stressCentrality = new StressCentrality<Integer>(sssPath, allNodes );
 			Eccentricity<Integer> eccentricity = new Eccentricity<Integer>( sssPath, 0,allNodes, new IntegerComparator() );
-			ClosenessCentrality<Integer> closenessCentrality = new ClosenessCentrality<Integer>(
-					sssPath, new IntegerAdder(), 0, allNodes, new CostDivider<Integer>()
-					{
-						@Override
-						public Integer divideByCost(Double d, Integer c) {
-							return d.intValue() / c;
-						}
+			
+			ClosenessCentrality2<Integer> closenessCentrality = new ClosenessCentrality2<>(sssPath, new IntegerAdder(), 0.0, allNodes, new CostDivider2<Integer>() {
 
-						@Override
-						public Integer divideCost(Integer c, Double d) {
-							return c / d.intValue();
-						}
-					} );
+				@Override
+				public Double divideCost(Integer c, Double d) {
+					return c.doubleValue() / d;
+				}
+
+				@Override
+				public Double divideByCost(Double d, Integer c) {
+					return d / c.doubleValue();
+				}
+			});
+			
+//			ClosenessCentrality2<Integer> closenessCentrality = new ClosenessCentrality2<Integer>(
+//					sssPath, new IntegerAdder(), 0, allNodes, new CostDivider2<Integer>()
+//					{
+//						@Override
+//						public Double divideByCost(Double d, Integer c) {
+//							return d.intValue() / c;
+//						}
+//
+//						@Override
+//						public Double divideCost(Integer c, Double d) {
+//							return c / d.intValue();
+//						}
+//					} );
 //			AverageShortestPath<Integer> avgSP = new AverageShortestPath<Integer>(sssPath, allNodes);
 
-//			ParallellCentralityCalculation<Integer> ppc = new ParallellCentralityCalculation<>(sssPath, allNodes);
-//			ppc.addCalculation(stressCentrality);
-//			ppc.addCalculation(eccentricity);
-//			ppc.addCalculation(betweennessCentrality);
-//			ppc.addCalculation(closenessCentrality);
-////			ppc.addCalculation(avgSP);
-//			ppc.calculate();	
+			ParallellCentralityCalculation<Integer> ppc = new ParallellCentralityCalculation<Integer>(sssPath, allNodes);
+			ppc.addCalculation(stressCentrality);
+			ppc.addCalculation(eccentricity);
+			ppc.addCalculation(betweennessCentrality);
+			ppc.addCalculation(closenessCentrality);
+//			ppc.addCalculation(avgSP);
+			ppc.calculate();	
 
 			for(Node node : GlobalGraphOperations.at(graph).getAllNodes()){
 				Map<String, Object> stats = new HashMap<String,Object>();
@@ -100,9 +114,9 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 					stats.put("neo_name", node.getProperty("name","unknown"));
 					stats.put("neo_betweenness", betweenness * 2);
-//					stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
-//					stats.put("neo_closenesscentrality", closenessCentrality.getCentrality(node));
-//					stats.put("neo_eccentriticy", eccentricity.getCentrality(node));
+					stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
+					stats.put("neo_closenesscentrality", closenessCentrality.getCentrality(node));
+					stats.put("neo_eccentriticy", eccentricity.getCentrality(node));
 //					stats.put("neo_avgSP", avgSP.getCentrality(node));
 
 					//Node Properties:
