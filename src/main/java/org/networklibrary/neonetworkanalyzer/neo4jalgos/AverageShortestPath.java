@@ -1,5 +1,6 @@
 package org.networklibrary.neonetworkanalyzer.neo4jalgos;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,15 +22,27 @@ public class AverageShortestPath<ShortestPathCostType> extends
 	public void processShortestPaths(
 			Node node,
 			SingleSourceShortestPath<ShortestPathCostType> singleSourceShortestPath) {
-		
+
 		long sum = 0;
 		long numPaths = 0;
+	
+		Set<Node> visited = new HashSet<Node>();
 		
 		for(Node n : nodeSet){
 			List<List<Node>> paths = singleSourceShortestPath.getPathsAsNodes(n);
-			numPaths += paths.size();
+//			numPaths += paths.size();
+			
 			for(List<Node> path : paths){
-				sum += path.size();
+				
+				for(int i = 1; i < path.size(); ++i){
+					if(visited.contains(path.get(i)))
+						continue;
+					else {
+						sum += i;
+						++numPaths;
+						visited.add(path.get(i));
+					}
+				}
 			}
 		}
 		

@@ -11,12 +11,14 @@ import java.util.Set;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.neo4j.cypher.internal.compiler.v2_1.functions.ToLower;
+import org.neo4j.graphalgo.CostEvaluator;
 import org.neo4j.graphalgo.impl.centrality.BetweennessCentrality;
 import org.neo4j.graphalgo.impl.centrality.Eccentricity;
 import org.neo4j.graphalgo.impl.centrality.ParallellCentralityCalculation;
-import org.neo4j.graphalgo.impl.centrality.StressCentrality;
 import org.neo4j.graphalgo.impl.shortestpath.SingleSourceShortestPath;
 import org.neo4j.graphalgo.impl.shortestpath.SingleSourceShortestPathBFS;
+import org.neo4j.graphalgo.impl.shortestpath.SingleSourceShortestPathDijkstra;
 import org.neo4j.graphalgo.impl.util.IntegerAdder;
 import org.neo4j.graphalgo.impl.util.IntegerComparator;
 import org.neo4j.graphdb.Direction;
@@ -35,11 +37,21 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 		List<String> res = new ArrayList<String>();
 
 		try (Transaction tx = graph.beginTx()){
+			System.out.println("num nodes:" + Iterables.count(GlobalGraphOperations.at(graph).getAllNodes()));
+			System.out.println("num nodes:" + Iterables.count(GlobalGraphOperations.at(graph).getAllRelationships()));
 
 			RelationshipType[] types = Iterables.toArray(RelationshipType.class,GlobalGraphOperations.at(graph).getAllRelationshipTypes());
 
-			SingleSourceShortestPath sssPath = new SingleSourceShortestPathBFS(null, Direction.BOTH, types);
+//			SingleSourceShortestPath sssPath = new SingleSourceShortestPathBFS(null, Direction.BOTH, types);
 			
+			SingleSourceShortestPath sssPath = new SingleSourceShortestPathDijkstra<Integer>(0, null, new CostEvaluator<Integer>(){
+				@Override
+				public Integer getCost(Relationship relationship, Direction direction) {
+					
+					return new Integer(1);
+				}
+			}, new IntegerAdder(), new IntegerComparator(), Direction.BOTH, types);
+//			
 			Set<Node> allNodes = new HashSet<Node>();
 			
 			// this is to check isolated nodes and not calculate certain parameters for it
@@ -51,47 +63,27 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 			
 			double normFactor = computeNormFactor(allNodes.size());
 
-			BetweennessCentrality<Integer> betweennessCentrality = new BetweennessCentrality<Integer>(sssPath, allNodes );
+			BetweennessCentralityMulti<Integer> betweennessCentrality = new BetweennessCentralityMulti<Integer>(sssPath, allNodes );
 			
 			StressCentrality<Integer> stressCentrality = new StressCentrality<Integer>(sssPath, allNodes );
 			Eccentricity<Integer> eccentricity = new Eccentricity<Integer>( sssPath, 0,allNodes, new IntegerComparator() );
-			
-			ClosenessCentrality2<Integer> closenessCentrality = new ClosenessCentrality2<>(sssPath, new IntegerAdder(), 0.0, allNodes, new CostDivider2<Integer>() {
-
-				@Override
-				public Double divideCost(Integer c, Double d) {
-					return c.doubleValue() / d;
-				}
-
-				@Override
-				public Double divideByCost(Double d, Integer c) {
-					return d / c.doubleValue();
-				}
-			});
-			
-//			ClosenessCentrality2<Integer> closenessCentrality = new ClosenessCentrality2<Integer>(
-//					sssPath, new IntegerAdder(), 0, allNodes, new CostDivider2<Integer>()
-//					{
-//						@Override
-//						public Double divideByCost(Double d, Integer c) {
-//							return d.intValue() / c;
-//						}
-//
-//						@Override
-//						public Double divideCost(Integer c, Double d) {
-//							return c / d.intValue();
-//						}
-//					} );
-//			AverageShortestPath<Integer> avgSP = new AverageShortestPath<Integer>(sssPath, allNodes);
+			AverageShortestPath<Integer> avgSP = new AverageShortestPath<Integer>(sssPath, allNodes);
 
 			ParallellCentralityCalculation<Integer> ppc = new ParallellCentralityCalculation<Integer>(sssPath, allNodes);
 			ppc.addCalculation(stressCentrality);
 			ppc.addCalculation(eccentricity);
 			ppc.addCalculation(betweennessCentrality);
-			ppc.addCalculation(closenessCentrality);
-//			ppc.addCalculation(avgSP);
-			ppc.calculate();	
-
+			ppc.addCalculation(avgSP);
+			ppc.calculate();
+			
+			int maxEccentricity = findMaxEccentricity(eccentricity,allNodes);
+			
+			ClusteringCoeff clustCoeff = new ClusteringCoeff();
+			NeighbourhoodConnectivity neighbourhoodConn = new NeighbourhoodConnectivity();
+			MultiEdgePairs multiEdgePairs = new MultiEdgePairs();
+			TopologicalCoeff topoCoeff = new TopologicalCoeff();
+			Radiality<Integer> radiality = new Radiality<>(maxEccentricity, avgSP);
+			
 			for(Node node : GlobalGraphOperations.at(graph).getAllNodes()){
 				Map<String, Object> stats = new HashMap<String,Object>();
 				stats.put("nodeid", node.getId());
@@ -111,33 +103,28 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 					thisNode.add(node);
 
 					double betweenness = betweennessCentrality.getCentrality(node) * normFactor;
+					double closeness = (avgSP.getCentrality(node) > 0) ? (1/avgSP.getCentrality(node)) : 0.0;
 
 					stats.put("neo_name", node.getProperty("name","unknown"));
 					stats.put("neo_betweenness", betweenness * 2);
 					stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
-					stats.put("neo_closenesscentrality", closenessCentrality.getCentrality(node));
+					stats.put("neo_closenesscentrality", closeness);
 					stats.put("neo_eccentriticy", eccentricity.getCentrality(node));
-//					stats.put("neo_avgSP", avgSP.getCentrality(node));
-
-					//Node Properties:
-					//AverageShortestPathLength
-					//ClusteringCoefficient
-					//NeighborhoodConnectivity
-					//PartnerOfMultiEdgedNodePairs
-					//SelfLoops
+					stats.put("neo_avgSP", avgSP.getCentrality(node));
+					stats.put("neo_clustcoeff", clustCoeff.calcClusteringCoeff(node));
+					stats.put("neo_neighbourhoodconnectivity",neighbourhoodConn.calcNeighbourhoodConnectivity(node));
+					stats.put("neo_multiedgepairs",multiEdgePairs.calcMultipleEdgePairs(node));
+					stats.put("neo_topologicalcoeff", topoCoeff.calcTopologicalCoeff(node));
+					stats.put("neo_radiality", radiality.calcRadiality(node));
 				}
 
-				// ... and more
 				try {
 					res.add(toJSON(stats));
 				} catch (JsonGenerationException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (JsonMappingException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -146,15 +133,29 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 		return res;
 	}
 
+	
+	protected int findMaxEccentricity(Eccentricity<Integer> eccentricity,
+			Set<Node> allNodes) {
+		int max = 0;
+		
+		for(Node n : allNodes){
+			if(eccentricity.getCentrality(n) > max)
+				max = eccentricity.getCentrality(n);
+		}
+		
+		return max;
+	}
+	
 	String toJSON(Map<String,Object> nodeResults) throws JsonGenerationException, JsonMappingException, IOException{
 		ObjectMapper m = new ObjectMapper();
 		return m.writeValueAsString(nodeResults);
 	}
-
+	
 	/* code from: https://github.com/cytoscape/cytoscape-impl/blob/develop/network-analyzer-impl/src/main/java/de/mpg/mpi_inf/bioinf/netanalyzer/UndirNetworkAnalyzer.java
 	 */
 	protected double computeNormFactor(int count) {
 		return (count > 2) ? (1.0 / ((count - 1) * (count - 2))) : 1.0;
 	}
 
+	
 }
