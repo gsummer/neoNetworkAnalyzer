@@ -25,7 +25,11 @@ public class ClusteringCoeff {
 		edgeCount /= 2;
 		
 		clustCoeff = (double) 2*edgeCount / (neighbourhoodSize * (neighbourhoodSize-1));
-		return clustCoeff;
+		
+		if(Double.isNaN(clustCoeff))
+			return 0.0;
+		else
+			return clustCoeff;
 	}
 	
 	
