@@ -42,6 +42,8 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 			splitComponents(graph);
 		}
 
+		System.out.println("num components: " + components.size());
+		
 		for(Set<Node> component : components){
 
 			try (Transaction tx = graph.beginTx()){

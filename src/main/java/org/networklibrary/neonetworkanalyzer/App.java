@@ -16,7 +16,8 @@ public class App
     public static void main( String[] args )
     {
     	// mac os x
-    	String testing = "/Users/gsu/random/cynetlibsync/neo4j-community-2.1.1/data/graph.db";
+//    	String testing = "/Users/gsu/random/cynetlibsync/neo4j-community-2.1.1/data/graph.db";
+    	String testing = "/Users/gsu/random/cynetlibsync/neo4j-community-2.1.1-2/data/graph.db";
 //        testing = "/Users/gsu/random/cynetlibsync/neo4j-community-2.0.3_testing/data/graph.db";
 
         
