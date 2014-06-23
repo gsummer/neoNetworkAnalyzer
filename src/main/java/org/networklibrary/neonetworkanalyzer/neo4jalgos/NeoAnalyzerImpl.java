@@ -42,12 +42,9 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 			splitComponents(graph);
 		}
 
-<<<<<<< HEAD
 		System.out.println("num components: " + components.size());
-		
-=======
 		int currComp = 0;
->>>>>>> 85b665c0365b18e3d2772acc82859505fcad5664
+
 		for(Set<Node> component : components){
 			System.out.println("starting with component "+currComp+" of size: " + component.size());
 
