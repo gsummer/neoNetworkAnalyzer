@@ -42,9 +42,14 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 			splitComponents(graph);
 		}
 
+<<<<<<< HEAD
 		System.out.println("num components: " + components.size());
 		
+=======
+		int currComp = 0;
+>>>>>>> 85b665c0365b18e3d2772acc82859505fcad5664
 		for(Set<Node> component : components){
+			System.out.println("starting with component "+currComp+" of size: " + component.size());
 
 			try (Transaction tx = graph.beginTx()){
 
@@ -81,7 +86,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 				TopologicalCoeff topoCoeff = new TopologicalCoeff();
 				Radiality<Integer> radiality = new Radiality<>(maxEccentricity, avgSP);
 
-				for(Node node : GlobalGraphOperations.at(graph).getAllNodes()){
+				for(Node node : component){
 					Map<String, Object> stats = new HashMap<String,Object>();
 					stats.put("nodeid", node.getId());
 
@@ -126,6 +131,9 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 					}
 				}
 			}
+			System.out.println("finished with component " + currComp);
+			++currComp;
+			
 		}
 
 		return res;
