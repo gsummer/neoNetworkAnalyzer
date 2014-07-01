@@ -54,7 +54,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 				RelationshipType[] types = Iterables.toArray(RelationshipType.class,GlobalGraphOperations.at(graph).getAllRelationshipTypes());
 
-				SingleSourceShortestPath sssPath = new SingleSourceShortestPathDijkstra<Integer>(0, null, new CostEvaluator<Integer>(){
+				SingleSourceShortestPath<Integer> sssPath = new SingleSourceShortestPathDijkstra<Integer>(0, null, new CostEvaluator<Integer>(){
 					@Override
 					public Integer getCost(Relationship relationship, Direction direction) {
 
