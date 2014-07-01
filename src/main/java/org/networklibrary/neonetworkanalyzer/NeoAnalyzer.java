@@ -6,6 +6,6 @@ import org.neo4j.graphdb.GraphDatabaseService;
 
 public interface NeoAnalyzer {
 
-	List<String> analyze(GraphDatabaseService graph);
+	List<String> analyze(GraphDatabaseService graph,boolean saveInGraph);
 	
 }

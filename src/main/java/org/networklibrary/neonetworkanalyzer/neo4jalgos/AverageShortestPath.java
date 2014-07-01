@@ -2,6 +2,7 @@ package org.networklibrary.neonetworkanalyzer.neo4jalgos;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.neo4j.graphalgo.impl.centrality.ShortestPathBasedCentrality;
@@ -11,7 +12,7 @@ import org.neo4j.graphdb.Node;
 
 public class AverageShortestPath<ShortestPathCostType> extends
 		ShortestPathBasedCentrality<Double, ShortestPathCostType> {
-
+	
 	public AverageShortestPath(
 			SingleSourceShortestPath<ShortestPathCostType> singleSourceShortestPath,
 			Set<Node> nodeSet) {

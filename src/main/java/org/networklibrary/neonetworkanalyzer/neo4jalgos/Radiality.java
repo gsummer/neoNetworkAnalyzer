@@ -5,15 +5,16 @@ import org.neo4j.graphdb.Node;
 public class Radiality<ShortestPathCostType> {
 
 	protected int diameter = 0;
-	protected AverageShortestPath<ShortestPathCostType> asp;
+	protected AverageShortestPath<Integer> avgSP;
 	
-	public Radiality(int diameter,AverageShortestPath<ShortestPathCostType> asp){
+	public Radiality(int diameter,AverageShortestPath<Integer> avgSP){
 		this.diameter = diameter;
-		this.asp = asp;
+		this.avgSP = avgSP;
 	}
 	
 	public double calcRadiality(Node node){
-		double rad = (diameter + 1.0 - asp.getCentrality(node).doubleValue()) / diameter;
+		double asp = avgSP.getCentrality(node);
+		double rad = (diameter + 1.0 - asp) / diameter;
 		return rad;
 	}
 	
