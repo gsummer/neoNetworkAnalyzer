@@ -107,7 +107,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 						stats.put("neo_avgSP", 0.0);
 						stats.put("neo_clustcoeff", 0.0);
 						stats.put("neo_neighbourhoodconnectivity",0.0);
-						stats.put("neo_multiedgepairs",0.0);
+						stats.put("neo_multiedgepairs",0L);
 						stats.put("neo_topologicalcoeff", 0.0);
 
 					} else {
