@@ -19,7 +19,7 @@ public class TopologicalCoeff {
 		for (final Node nb : neighbours) {
 			Set<Node> currentComNeNodes = NetworkUtils.getUniqueNeighbours(nb);
 			for (final Node n : currentComNeNodes) {
-				if (n != node) {
+				if (!n.equals(node)) {
 					tc++;
 					if (comNeNodes.add(n)) {
 						if (neighbours.contains(n)) {

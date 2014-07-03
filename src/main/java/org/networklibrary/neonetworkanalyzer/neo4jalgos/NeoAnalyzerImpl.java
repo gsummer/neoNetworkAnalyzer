@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 
@@ -34,15 +35,18 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 	protected List<Set<Node>> components = null;
 
-	public List<String> analyze(GraphDatabaseService graph) {
+	public List<String> analyze(GraphDatabaseService graph,boolean saveInGraph) {
 		List<String> res = new ArrayList<String>();
 
 		try(Transaction tx = graph.beginTx()){
 
 			splitComponents(graph);
+			tx.success();
 		}
 
+		System.out.println("num components: " + components.size());
 		int currComp = 0;
+
 		for(Set<Node> component : components){
 			System.out.println("starting with component "+currComp+" of size: " + component.size());
 
@@ -50,7 +54,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 				RelationshipType[] types = Iterables.toArray(RelationshipType.class,GlobalGraphOperations.at(graph).getAllRelationshipTypes());
 
-				SingleSourceShortestPath sssPath = new SingleSourceShortestPathDijkstra<Integer>(0, null, new CostEvaluator<Integer>(){
+				SingleSourceShortestPath<Integer> sssPath = new SingleSourceShortestPathDijkstra<Integer>(0, null, new CostEvaluator<Integer>(){
 					@Override
 					public Integer getCost(Relationship relationship, Direction direction) {
 
@@ -83,7 +87,6 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 				for(Node node : component){
 					Map<String, Object> stats = new HashMap<String,Object>();
-					stats.put("nodeid", node.getId());
 
 					Iterable<Relationship> rels  = node.getRelationships();
 					long edgecount = Iterables.count(rels);
@@ -94,20 +97,35 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 					stats.put("neo_issinglenode", (edgecount==0) ? true : false);
 
 					if(edgecount == 0){
+						//						stats.put("neo_name", node.getProperty("name","unknown"));
+						stats.put("neo_indegree", 0);
+						stats.put("neo_outdegree", 0);
+						stats.put("neo_betweenness", 0.0);
+						stats.put("neo_stresscentrality", 0.0);
+						stats.put("neo_closenesscentrality", 0.0);
+						stats.put("neo_eccentriticy", 0);
+						stats.put("neo_avgSP", 0.0);
+						stats.put("neo_clustcoeff", 0.0);
+						stats.put("neo_neighbourhoodconnectivity",0.0);
+						stats.put("neo_multiedgepairs",0L);
+						stats.put("neo_topologicalcoeff", 0.0);
 
 					} else {
 						Set<Node> thisNode = new HashSet<Node>();
 						thisNode.add(node);
 
-						double betweenness = betweennessCentrality.getCentrality(node) * normFactor;
-						double closeness = (avgSP.getCentrality(node) > 0) ? (1/avgSP.getCentrality(node)) : 0.0;
+						double avgsp = avgSP.getCentrality(node);
+						double betweenness = betweennessCentrality.getCentrality(node) * normFactor * 2;
+						double closeness = (avgsp > 0) ? (1/avgsp) : 0.0;
 
-						stats.put("neo_name", node.getProperty("name","unknown"));
-						stats.put("neo_betweenness", betweenness * 2);
+						stats.put("neo_indegree", Iterables.count(node.getRelationships(Direction.INCOMING)));
+						stats.put("neo_outdegree", Iterables.count(node.getRelationships(Direction.OUTGOING)));
+						//						stats.put("neo_name", node.getProperty("name","unknown"));
+						stats.put("neo_betweenness", betweenness);
 						stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
 						stats.put("neo_closenesscentrality", closeness);
 						stats.put("neo_eccentriticy", eccentricity.getCentrality(node));
-						stats.put("neo_avgSP", avgSP.getCentrality(node));
+						stats.put("neo_avgSP", avgsp);
 						stats.put("neo_clustcoeff", clustCoeff.calcClusteringCoeff(node));
 						stats.put("neo_neighbourhoodconnectivity",neighbourhoodConn.calcNeighbourhoodConnectivity(node));
 						stats.put("neo_multiedgepairs",multiEdgePairs.calcMultipleEdgePairs(node));
@@ -116,7 +134,12 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 					}
 
 					try {
+						if(saveInGraph){
+							addToGraph(node,stats,graph);
+						}
+						stats.put("nodeid", node.getId());
 						res.add(toJSON(stats));
+
 					} catch (JsonGenerationException e) {
 						e.printStackTrace();
 					} catch (JsonMappingException e) {
@@ -125,71 +148,84 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 						e.printStackTrace();
 					}
 				}
+				tx.success();
 			}
 			System.out.println("finished with component " + currComp);
 			++currComp;
 			
+
 		}
 
 		return res;
-		}
+	}
 
 
-		protected void splitComponents(GraphDatabaseService graph) {
-			components = new ArrayList<Set<Node>>();
-			Set<Node> visited = new HashSet<Node>();
+	private void addToGraph(Node n, Map<String, Object> stats,GraphDatabaseService graph) {
 
-			for(Node n : GlobalGraphOperations.at(graph).getAllNodes()){
-				if(visited.contains(n))
-					continue;
-
-				Set<Node> currComponent = new HashSet<Node>();
-
-				visited.add(n);
-				currComponent.add(n);
-
-				Queue<Node> q = new LinkedList<Node>();
-
-				q.addAll(NetworkUtils.getUniqueNeighbours(n));
-
-				while(!q.isEmpty()){
-					Node curr = q.poll();
-					if(visited.contains(curr))
-						continue;
-
-					visited.add(curr);
-					currComponent.add(curr);
-					q.addAll(NetworkUtils.getUniqueNeighbours(curr));
-				}
-
-				components.add(currComponent);
+		try(Transaction tx = graph.beginTx()){
+			for(Entry<String,Object> e : stats.entrySet()){
+				n.setProperty(e.getKey(), e.getValue());
 			}
 
+			tx.success();
 		}
-
-
-		protected int findMaxEccentricity(Eccentricity<Integer> eccentricity,
-				Set<Node> allNodes) {
-			int max = 0;
-
-			for(Node n : allNodes){
-				if(eccentricity.getCentrality(n) > max)
-					max = eccentricity.getCentrality(n);
-			}
-
-			return max;
-		}
-
-		String toJSON(Map<String,Object> nodeResults) throws JsonGenerationException, JsonMappingException, IOException{
-			ObjectMapper m = new ObjectMapper();
-			return m.writeValueAsString(nodeResults);
-		}
-
-		/* code from: https://github.com/cytoscape/cytoscape-impl/blob/develop/network-analyzer-impl/src/main/java/de/mpg/mpi_inf/bioinf/netanalyzer/UndirNetworkAnalyzer.java
-		 */
-		protected double computeNormFactor(int count) {
-			return (count > 2) ? (1.0 / ((count - 1) * (count - 2))) : 1.0;
-		}
-
 
 	}
+
+
+	protected void splitComponents(GraphDatabaseService graph) {
+		components = new ArrayList<Set<Node>>();
+		Set<Node> visited = new HashSet<Node>();
+
+		for(Node n : GlobalGraphOperations.at(graph).getAllNodes()){
+			if(visited.contains(n))
+				continue;
+
+			Set<Node> currComponent = new HashSet<Node>();
+
+			visited.add(n);
+			currComponent.add(n);
+
+			Queue<Node> q = new LinkedList<Node>();
+
+			q.addAll(NetworkUtils.getUniqueNeighbours(n));
+
+			while(!q.isEmpty()){
+				Node curr = q.poll();
+				if(visited.contains(curr))
+					continue;
+
+				visited.add(curr);
+				currComponent.add(curr);
+				q.addAll(NetworkUtils.getUniqueNeighbours(curr));
+			}
+
+			components.add(currComponent);
+		}
+
+	}
+
+	protected int findMaxEccentricity(Eccentricity<Integer> eccentricity,Set<Node> nodes) {
+		int max = 0;
+		for(Node n : nodes){
+			int eccentriticy  = eccentricity.getCentrality(n);
+			if(eccentriticy > max)
+				max = eccentriticy;
+		}
+
+		return max;
+	}
+
+	String toJSON(Map<String,Object> nodeResults) throws JsonGenerationException, JsonMappingException, IOException{
+		ObjectMapper m = new ObjectMapper();
+		return m.writeValueAsString(nodeResults);
+	}
+
+	/* code from: https://github.com/cytoscape/cytoscape-impl/blob/develop/network-analyzer-impl/src/main/java/de/mpg/mpi_inf/bioinf/netanalyzer/UndirNetworkAnalyzer.java
+	 */
+	protected double computeNormFactor(int count) {
+		return (count > 2) ? (1.0 / ((count - 1) * (count - 2))) : 1.0;
+	}
+
+
+}

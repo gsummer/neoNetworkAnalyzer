@@ -11,7 +11,7 @@ import org.neo4j.graphdb.Node;
 
 public class AverageShortestPath<ShortestPathCostType> extends
 		ShortestPathBasedCentrality<Double, ShortestPathCostType> {
-
+	
 	public AverageShortestPath(
 			SingleSourceShortestPath<ShortestPathCostType> singleSourceShortestPath,
 			Set<Node> nodeSet) {

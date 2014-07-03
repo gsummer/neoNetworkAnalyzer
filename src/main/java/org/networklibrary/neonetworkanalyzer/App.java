@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeoAnalyzerImpl;
 
 /**
@@ -13,6 +12,7 @@ import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeoAnalyzerImpl;
  */
 public class App 
 {
+<<<<<<< HEAD
     public static void main( String[] args )
     {
     	// mac os x
@@ -45,4 +45,34 @@ public class App
         	System.out.println(nodeProps);
         }
     }
+=======
+	public static void main( String[] args )
+	{
+		// mac os x
+		//    	String testing = "/Users/gsu/random/cynetlibsync/neo4j-community-2.1.1/data/graph.db";
+		String testing = "/Users/gsu/random/cynetlibsync/neo4j-community-2.1.1-2/data/graph.db";
+		//        testing = "/Users/gsu/random/cynetlibsync/neo4j-community-2.0.3_testing/data/graph.db";
+
+
+		// proper OS
+
+		//        final String testing = "/home/gsu/random/neoanalyzer/testing/data/graph.db";
+		//        final String full = "/home/gsu/random/neoanalyzer/full/data/graph.db";
+
+		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(testing);
+
+		System.out.println("starting to analyze:");
+		NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl();
+
+		long start = System.currentTimeMillis();
+		List<String> res = analyzer.analyze(g,true);
+		long end = System.currentTimeMillis();
+
+		System.out.println("duration: " + (end - start));
+
+		for(String nodeProps : res){
+			System.out.println(nodeProps);
+		}
+	}
+>>>>>>> cd77b1e9ed48c8e0af94cacd98bf578b639a9bb7
 }

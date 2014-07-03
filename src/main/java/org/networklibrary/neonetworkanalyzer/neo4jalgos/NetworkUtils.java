@@ -13,7 +13,7 @@ public class NetworkUtils {
 		
 		// that really correct? more testing needed
 		for(Relationship rel : n.getRelationships()){
-			if(rel.getOtherNode(n) != n)
+			if(!rel.getOtherNode(n).equals(n))
 				uniqueNeighbours.add(rel.getOtherNode(n));
 		}
 		
