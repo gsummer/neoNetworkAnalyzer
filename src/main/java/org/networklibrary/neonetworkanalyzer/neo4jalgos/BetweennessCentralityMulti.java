@@ -17,6 +17,8 @@ import org.neo4j.graphdb.Relationship;
 
 public class BetweennessCentralityMulti<ShortestPathCostType> extends BetweennessCentrality<ShortestPathCostType> {
 
+	public int currNodeI = 0;
+	
 	public BetweennessCentralityMulti(
 			SingleSourceShortestPath<ShortestPathCostType> singleSourceShortestPath,
 			Set<Node> nodeSet )
@@ -28,6 +30,7 @@ public class BetweennessCentralityMulti<ShortestPathCostType> extends Betweennes
     public void processShortestPaths( Node node,
         SingleSourceShortestPath<ShortestPathCostType> singleSourceShortestPath )
     {
+		System.out.println("starting on node: " + currNodeI + " " + node);
         // Extract predecessors and successors
         Map<Node,List<Relationship>> predecessors = singleSourceShortestPath
             .getPredecessors();
@@ -40,6 +43,9 @@ public class BetweennessCentralityMulti<ShortestPathCostType> extends Betweennes
         // Recursively update the node dependencies
         getAndUpdateNodeDependency( node, true, successors, counter,
             new HashMap<Node,Double>() );
+        
+        System.out.println("finished on node: " + currNodeI + " " + node);
+        ++currNodeI;
     }
 
 	protected void filterMultiEdgePaths(Map<Node, List<Relationship>> predecessors) {

@@ -50,42 +50,50 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 		for(Set<Node> component : components){
 			System.out.println("starting with component "+currComp+" of size: " + component.size());
 
+			RelationshipType[] types = null;
 			try (Transaction tx = graph.beginTx()){
 
-				RelationshipType[] types = Iterables.toArray(RelationshipType.class,GlobalGraphOperations.at(graph).getAllRelationshipTypes());
+				types = Iterables.toArray(RelationshipType.class,GlobalGraphOperations.at(graph).getAllRelationshipTypes());
+				tx.success();
+			}
+			
+			SingleSourceShortestPath<Integer> sssPath = new SingleSourceShortestPathDijkstra<Integer>(0, null, new CostEvaluator<Integer>(){
+				@Override
+				public Integer getCost(Relationship relationship, Direction direction) {
 
-				SingleSourceShortestPath<Integer> sssPath = new SingleSourceShortestPathDijkstra<Integer>(0, null, new CostEvaluator<Integer>(){
-					@Override
-					public Integer getCost(Relationship relationship, Direction direction) {
+					return new Integer(1);
+				}
+			}, new IntegerAdder(), new IntegerComparator(), Direction.BOTH, types);
 
-						return new Integer(1);
-					}
-				}, new IntegerAdder(), new IntegerComparator(), Direction.BOTH, types);
+			double normFactor = computeNormFactor(component.size());
 
-				double normFactor = computeNormFactor(component.size());
+			BetweennessCentralityMulti<Integer> betweennessCentrality = new BetweennessCentralityMulti<Integer>(sssPath, component );
+			StressCentrality<Integer> stressCentrality = new StressCentrality<Integer>(sssPath, component );
+			Eccentricity<Integer> eccentricity = new Eccentricity<Integer>( sssPath, 0,component, new IntegerComparator() );
+//			AverageShortestPath<Integer> avgSP = new AverageShortestPath<Integer>(sssPath, component);
 
-				BetweennessCentralityMulti<Integer> betweennessCentrality = new BetweennessCentralityMulti<Integer>(sssPath, component );
-
-				StressCentrality<Integer> stressCentrality = new StressCentrality<Integer>(sssPath, component );
-				Eccentricity<Integer> eccentricity = new Eccentricity<Integer>( sssPath, 0,component, new IntegerComparator() );
-				AverageShortestPath<Integer> avgSP = new AverageShortestPath<Integer>(sssPath, component);
-
+			try (Transaction tx = graph.beginTx()){
 				ParallellCentralityCalculation<Integer> ppc = new ParallellCentralityCalculation<Integer>(sssPath, component);
-				ppc.addCalculation(stressCentrality);
+//				ppc.addCalculation(stressCentrality);
 				ppc.addCalculation(eccentricity);
 				ppc.addCalculation(betweennessCentrality);
-				ppc.addCalculation(avgSP);
+//				ppc.addCalculation(avgSP);
 				ppc.calculate();
+			}
 
-				int maxEccentricity = findMaxEccentricity(eccentricity,component);
+//			int maxEccentricity = findMaxEccentricity(eccentricity,component);
 
-				ClusteringCoeff clustCoeff = new ClusteringCoeff();
-				NeighbourhoodConnectivity neighbourhoodConn = new NeighbourhoodConnectivity();
-				MultiEdgePairs multiEdgePairs = new MultiEdgePairs();
-				TopologicalCoeff topoCoeff = new TopologicalCoeff();
-				Radiality<Integer> radiality = new Radiality<>(maxEccentricity, avgSP);
+			ClusteringCoeff clustCoeff = new ClusteringCoeff();
+			NeighbourhoodConnectivity neighbourhoodConn = new NeighbourhoodConnectivity();
+			MultiEdgePairs multiEdgePairs = new MultiEdgePairs();
+			TopologicalCoeff topoCoeff = new TopologicalCoeff();
+//			Radiality<Integer> radiality = new Radiality<>(maxEccentricity, avgSP);
 
-				for(Node node : component){
+			int currNodeI = 0;
+			
+			for(Node node : component){
+				System.out.println("starting on node finishing up: " + currNodeI + " " + node);
+				try (Transaction tx = graph.beginTx()){
 					Map<String, Object> stats = new HashMap<String,Object>();
 
 					Iterable<Relationship> rels  = node.getRelationships();
@@ -114,23 +122,23 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 						Set<Node> thisNode = new HashSet<Node>();
 						thisNode.add(node);
 
-						double avgsp = avgSP.getCentrality(node);
+//						double avgsp = avgSP.getCentrality(node);
 						double betweenness = betweennessCentrality.getCentrality(node) * normFactor * 2;
-						double closeness = (avgsp > 0) ? (1/avgsp) : 0.0;
+//						double closeness = (avgsp > 0) ? (1/avgsp) : 0.0;
 
 						stats.put("neo_indegree", Iterables.count(node.getRelationships(Direction.INCOMING)));
 						stats.put("neo_outdegree", Iterables.count(node.getRelationships(Direction.OUTGOING)));
 						//						stats.put("neo_name", node.getProperty("name","unknown"));
 						stats.put("neo_betweenness", betweenness);
-						stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
-						stats.put("neo_closenesscentrality", closeness);
+//						stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
+//						stats.put("neo_closenesscentrality", closeness);
 						stats.put("neo_eccentriticy", eccentricity.getCentrality(node));
-						stats.put("neo_avgSP", avgsp);
+//						stats.put("neo_avgSP", avgsp);
 						stats.put("neo_clustcoeff", clustCoeff.calcClusteringCoeff(node));
 						stats.put("neo_neighbourhoodconnectivity",neighbourhoodConn.calcNeighbourhoodConnectivity(node));
 						stats.put("neo_multiedgepairs",multiEdgePairs.calcMultipleEdgePairs(node));
 						stats.put("neo_topologicalcoeff", topoCoeff.calcTopologicalCoeff(node));
-						stats.put("neo_radiality", radiality.calcRadiality(node));
+//						stats.put("neo_radiality", radiality.calcRadiality(node));
 					}
 
 					try {
@@ -147,12 +155,15 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+					tx.success();
 				}
-				tx.success();
+
+				System.out.println("finished on node finishing up: " + currNodeI + " " + node);
+		        ++currNodeI;
 			}
 			System.out.println("finished with component " + currComp);
 			++currComp;
-			
+
 
 		}
 
