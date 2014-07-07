@@ -7,9 +7,9 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -31,7 +31,7 @@ import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.tooling.GlobalGraphOperations;
 import org.networklibrary.neonetworkanalyzer.NeoAnalyzer;
 
-public class NeoAnalyzerImpl implements NeoAnalyzer {
+public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 
 	protected List<Set<Node>> components = null;
 
@@ -238,6 +238,5 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 	protected double computeNormFactor(int count) {
 		return (count > 2) ? (1.0 / ((count - 1) * (count - 2))) : 1.0;
 	}
-
 
 }
