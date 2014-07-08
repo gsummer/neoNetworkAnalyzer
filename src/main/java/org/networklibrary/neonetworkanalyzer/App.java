@@ -18,6 +18,7 @@ public class App
 		//    	String testing = "/Users/gsu/random/cynetlibsync/neo4j-community-2.1.1/data/graph.db";
 //		String testing = "/Users/gsu/random/cynetlibsync/neo4j-community-2.1.1-2/data/graph.db";
 		//        testing = "/Users/gsu/random/cynetlibsync/neo4j-community-2.0.3_testing/data/graph.db";
+		String testing = "/Users/gsu/random/neonetworkanalyzer/neo4j-community-2.1.2/data/graph.db";
 
 
 		// proper OS
@@ -25,7 +26,7 @@ public class App
 		//        final String testing = "/home/gsu/random/neoanalyzer/testing/data/graph.db";
 		//        final String full = "/home/gsu/random/neoanalyzer/full/data/graph.db";
 		
-		String testing = "/home/gsu/random/benchmarking/neo4j-community-2.1.2/data/graph.db";
+//		String testing = "/home/gsu/random/benchmarking/neo4j-community-2.1.2/data/graph.db";
 
 		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(testing);
 

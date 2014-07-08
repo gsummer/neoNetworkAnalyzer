@@ -30,7 +30,7 @@ public class BetweennessCentralityMulti<ShortestPathCostType> extends Betweennes
     public void processShortestPaths( Node node,
         SingleSourceShortestPath<ShortestPathCostType> singleSourceShortestPath )
     {
-		System.out.println("starting on node: " + currNodeI + " " + node);
+//		System.out.println("starting on node: " + currNodeI + " " + node);
         // Extract predecessors and successors
         Map<Node,List<Relationship>> predecessors = singleSourceShortestPath
             .getPredecessors();
@@ -44,7 +44,7 @@ public class BetweennessCentralityMulti<ShortestPathCostType> extends Betweennes
         getAndUpdateNodeDependency( node, true, successors, counter,
             new HashMap<Node,Double>() );
         
-        System.out.println("finished on node: " + currNodeI + " " + node);
+//        System.out.println("finished on node: " + currNodeI + " " + node);
         ++currNodeI;
     }
 
