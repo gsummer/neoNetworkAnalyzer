@@ -22,16 +22,17 @@ public class App
 
 		// proper OS
 
-//		        final String testing = "/home/gsu/random/neoanalyzer/testing/data/graph.db";
+		        final String testing = "/home/gsu/random/neoanalyzer/testing/data/graph.db";
 		//        final String full = "/home/gsu/random/neoanalyzer/full/data/graph.db";
 		
 //		String testing = "/home/gsu/random/benchmarking/neo4j-community-2.1.2/data/graph.db";
-		String testing = "/home/gsu/random/benchmarking/bigger/data/graph.db";
+//		String testing = "/home/gsu/random/benchmarking/bigger/data/graph.db";
 
 		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(testing);
 
 		System.out.println("starting to analyze:");
-		NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl();
+//		NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,true,true,true,true,true,true,true,true,true);
+		NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,false,true,false,false,false,false,false,false,false);
 
 		long start = System.currentTimeMillis();
 		List<String> res = analyzer.analyze(g,true);

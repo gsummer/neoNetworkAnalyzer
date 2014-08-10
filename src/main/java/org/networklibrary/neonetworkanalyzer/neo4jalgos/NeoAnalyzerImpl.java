@@ -34,6 +34,35 @@ import org.networklibrary.neonetworkanalyzer.NeoAnalyzer;
 public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 	protected List<Set<Node>> components = null;
+	private boolean eccentricityFlag;
+	private boolean betweennessFlag;
+	private boolean stressFlag;
+	private boolean avgSPFlag;
+	private boolean radialityFlag;
+	private boolean topoCoeffFlag;
+	private boolean neighbourhoodConnFlag;
+	private boolean multiEdgePairsFlag;
+	private boolean closenessFlag;
+	private boolean clustCoeffFlag;
+
+	public NeoAnalyzerImpl(boolean eccentricityFlag, boolean betweennessFlag,
+			boolean stressFlag, boolean avgSPFlag, boolean radialityFlag,
+			boolean topoCoeffFlag, boolean neighbourhoodConnFlag,
+			boolean multiEdgePairsFlag, boolean closenessFlag,
+			boolean clustCoeffFlag) {
+		super();
+		this.eccentricityFlag = eccentricityFlag;
+		this.betweennessFlag = betweennessFlag;
+		this.stressFlag = stressFlag;
+		this.avgSPFlag = avgSPFlag;
+		this.radialityFlag = radialityFlag;
+		this.topoCoeffFlag = topoCoeffFlag;
+		this.neighbourhoodConnFlag = neighbourhoodConnFlag;
+		this.multiEdgePairsFlag = multiEdgePairsFlag;
+		this.closenessFlag = closenessFlag;
+		this.clustCoeffFlag = clustCoeffFlag;
+	}
+
 
 	public List<String> analyze(GraphDatabaseService graph,boolean saveInGraph) {
 		List<String> res = new ArrayList<String>();
@@ -48,7 +77,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 		int currComp = 0;
 
 		for(Set<Node> component : components){
-			System.out.println("starting with component "+currComp+" of size: " + component.size());
+			System.out.println("starting with component "+ currComp +" of size: " + component.size());
 
 			RelationshipType[] types = null;
 			try (Transaction tx = graph.beginTx()){
@@ -67,28 +96,66 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 			double normFactor = computeNormFactor(component.size());
 
-			BetweennessCentralityMulti<Integer> betweennessCentrality = new BetweennessCentralityMulti<Integer>(sssPath, component );
-			StressCentrality<Integer> stressCentrality = new StressCentrality<Integer>(sssPath, component );
-			Eccentricity2<Integer> eccentricity = new Eccentricity2<Integer>( sssPath, 0,component, new IntegerComparator() );
-			AverageShortestPath<Integer> avgSP = new AverageShortestPath<Integer>(sssPath, component);
+			BetweennessCentralityMulti<Integer> betweennessCentrality = null;
+			StressCentrality<Integer> stressCentrality = null;
+			Eccentricity2<Integer> eccentricity = null;
+			AverageShortestPath<Integer> avgSP = null;
 
 			try (Transaction tx = graph.beginTx()){
 				ParallellCentralityCalculation<Integer> ppc = new ParallellCentralityCalculation<Integer>(sssPath, component);
 				
-				ppc.addCalculation(eccentricity);
-				ppc.addCalculation(betweennessCentrality);
-				ppc.addCalculation(stressCentrality);
-				ppc.addCalculation(avgSP);
+				if(doEccentritity()){
+					eccentricity = new Eccentricity2<Integer>( sssPath, 0,component, new IntegerComparator() );
+					ppc.addCalculation(eccentricity);
+				}
+				
+				if(doBetweenness()){
+					betweennessCentrality = new BetweennessCentralityMulti<Integer>(sssPath, component );
+					ppc.addCalculation(betweennessCentrality);
+				}
+				
+				if(doStress()){
+					stressCentrality = new StressCentrality<Integer>(sssPath, component );
+					ppc.addCalculation(stressCentrality);
+				}
+				
+				if(doAvgSP()){
+					avgSP = new AverageShortestPath<Integer>(sssPath, component);
+					ppc.addCalculation(avgSP);
+				}
+				
 				ppc.calculate();
 			}
 
-			int maxEccentricity = findMaxEccentricity(eccentricity,component);
-
-			ClusteringCoeff clustCoeff = new ClusteringCoeff();
-			NeighbourhoodConnectivity neighbourhoodConn = new NeighbourhoodConnectivity();
-			MultiEdgePairs multiEdgePairs = new MultiEdgePairs();
-			TopologicalCoeff topoCoeff = new TopologicalCoeff();
-			Radiality<Integer> radiality = new Radiality<>(maxEccentricity, avgSP);
+			
+			TopologicalCoeff topoCoeff = null;
+			Radiality<Integer> radiality = null;
+			ClusteringCoeff clustCoeff = null;
+			NeighbourhoodConnectivity neighbourhoodConn = null;
+			MultiEdgePairs multiEdgePairs = null;
+			
+			if(doTopoCoeff()){
+				topoCoeff = new TopologicalCoeff();
+			}
+			
+			if(doClusteringCoeff()){
+				clustCoeff = new ClusteringCoeff();
+			}
+			
+			if(doNeighbourhoodConnectivity()){
+				neighbourhoodConn = new NeighbourhoodConnectivity();
+			}
+			
+			if(doMultiEdgePairs()){
+				multiEdgePairs = new MultiEdgePairs();
+			}
+			
+			
+			if(doRadiality() && doEccentritity() && doAvgSP()){
+				int maxEccentricity = findMaxEccentricity(eccentricity,component);
+				radiality = new Radiality<>(maxEccentricity, avgSP);
+			}
+			
 
 			int currNodeI = 0;
 			
@@ -109,37 +176,70 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 						stats.put("neo_name", node.getProperty("name","unknown"));
 						stats.put("neo_indegree", 0);
 						stats.put("neo_outdegree", 0);
-						stats.put("neo_betweenness", 0.0);
-						stats.put("neo_stresscentrality", 0.0);
-						stats.put("neo_closenesscentrality", 0.0);
-						stats.put("neo_eccentriticy", 0);
-						stats.put("neo_avgSP", 0.0);
-						stats.put("neo_clustcoeff", 0.0);
-						stats.put("neo_neighbourhoodconnectivity",0.0);
-						stats.put("neo_multiedgepairs",0L);
-						stats.put("neo_topologicalcoeff", 0.0);
+						if(doBetweenness())
+							stats.put("neo_betweenness", 0.0);
+						
+						if(doStress())
+							stats.put("neo_stresscentrality", 0.0);
+						
+						if(doCloseness())
+							stats.put("neo_closenesscentrality", 0.0);
+						
+						if(doEccentritity())
+							stats.put("neo_eccentriticy", 0);
+						
+						if(doAvgSP())
+							stats.put("neo_avgSP", 0.0);
+						
+						if(doClusteringCoeff())
+							stats.put("neo_clustcoeff", 0.0);
+						
+						if(doNeighbourhoodConnectivity())
+							stats.put("neo_neighbourhoodconnectivity",0.0);
+						
+						if(doMultiEdgePairs())
+							stats.put("neo_multiedgepairs",0L);
+						
+						if(doTopoCoeff())
+							stats.put("neo_topologicalcoeff", 0.0);
 
 					} else {
 						Set<Node> thisNode = new HashSet<Node>();
 						thisNode.add(node);
-
-						double avgsp = avgSP.getCentrality(node);
-						double betweenness = betweennessCentrality.getCentrality(node) * normFactor * 2;
-						double closeness = (avgsp > 0) ? (1/avgsp) : 0.0;
-
+						
 						stats.put("neo_indegree", Iterables.count(node.getRelationships(Direction.INCOMING)));
 						stats.put("neo_outdegree", Iterables.count(node.getRelationships(Direction.OUTGOING)));
 						stats.put("neo_name", node.getProperty("name","unknown"));
-						stats.put("neo_betweenness", betweenness);
-						stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
-						stats.put("neo_closenesscentrality", closeness);
-						stats.put("neo_eccentriticy", eccentricity.getCentrality(node));
-						stats.put("neo_avgSP", avgsp);
-						stats.put("neo_clustcoeff", clustCoeff.calcClusteringCoeff(node));
-						stats.put("neo_neighbourhoodconnectivity",neighbourhoodConn.calcNeighbourhoodConnectivity(node));
-						stats.put("neo_multiedgepairs",multiEdgePairs.calcMultipleEdgePairs(node));
-						stats.put("neo_topologicalcoeff", topoCoeff.calcTopologicalCoeff(node));
-						stats.put("neo_radiality", radiality.calcRadiality(node));
+						
+						if(doBetweenness())
+							stats.put("neo_betweenness", betweennessCentrality.getCentrality(node) * normFactor * 2);
+						
+						if(doStress())
+							stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
+						if(doCloseness() && doAvgSP())
+							stats.put("neo_closenesscentrality", (avgSP.getCentrality(node)> 0) ? (1/avgSP.getCentrality(node)) : 0.0);
+						
+						if(doEccentritity())
+							stats.put("neo_eccentriticy", eccentricity.getCentrality(node));
+						
+						if(doAvgSP()){
+							stats.put("neo_avgSP", avgSP.getCentrality(node));
+						}
+						
+						if(doClusteringCoeff())
+							stats.put("neo_clustcoeff", clustCoeff.calcClusteringCoeff(node));
+						
+						if(doNeighbourhoodConnectivity())
+							stats.put("neo_neighbourhoodconnectivity",neighbourhoodConn.calcNeighbourhoodConnectivity(node));
+						
+						if(doMultiEdgePairs())
+							stats.put("neo_multiedgepairs",multiEdgePairs.calcMultipleEdgePairs(node));
+						
+						if(doTopoCoeff())
+							stats.put("neo_topologicalcoeff", topoCoeff.calcTopologicalCoeff(node));
+						
+						if(doRadiality() && doEccentritity() && doAvgSP())
+							stats.put("neo_radiality", radiality.calcRadiality(node));
 					}
 
 					try {
@@ -159,8 +259,6 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 					tx.success();
 				}
 
-//				System.out.println("finished on node finishing up: " + currNodeI + " " + node);
-//		        ++currNodeI;
 			}
 			System.out.println("finished with component " + currComp);
 			++currComp;
@@ -169,6 +267,65 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 		}
 
 		return res;
+	}
+
+
+	private boolean doClusteringCoeff() {
+		return clustCoeffFlag;
+	}
+
+
+	private boolean doCloseness() {
+		// TODO Auto-generated method stub
+		return closenessFlag;
+	}
+
+
+	private boolean doMultiEdgePairs() {
+		// TODO Auto-generated method stub
+		return multiEdgePairsFlag;
+	}
+
+
+	private boolean doNeighbourhoodConnectivity() {
+		// TODO Auto-generated method stub
+		return neighbourhoodConnFlag;
+	}
+
+
+	private boolean doTopoCoeff() {
+		// TODO Auto-generated method stub
+		return topoCoeffFlag;
+	}
+
+
+	private boolean doRadiality() {
+		// TODO Auto-generated method stub
+		return radialityFlag;
+	}
+
+
+	private boolean doAvgSP() {
+		// TODO Auto-generated method stub
+		return avgSPFlag;
+	}
+
+
+	private boolean doStress() {
+		// TODO Auto-generated method stub
+		return stressFlag;
+	}
+
+
+	private boolean doBetweenness() {
+		// TODO Auto-generated method stub
+		return betweennessFlag;
+	}
+
+
+	private boolean doEccentritity() {
+		// TODO Auto-generated method stub
+		return eccentricityFlag;
 	}
 
 
