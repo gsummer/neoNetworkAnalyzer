@@ -47,7 +47,8 @@ public class BetweennessCentralityMulti<ShortestPathCostType> extends Betweennes
         
 
 //        System.out.println("finished betweenness on node: " + currNodeI + " " + node);
-//        ++currNodeI;
+        ++currNodeI;
+        System.out.println("done with node nr: " + currNodeI);
     }
 
 	protected void filterMultiEdgePaths(Map<Node, List<Relationship>> predecessors) {
