@@ -104,7 +104,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 			try (Transaction tx = graph.beginTx()){
 				ParallellCentralityCalculation<Integer> ppc = new ParallellCentralityCalculation<Integer>(sssPath, component);
 				
-				if(doEccentritity()){
+				if(doRadiality() || doEccentritity()){
 					eccentricity = new Eccentricity2<Integer>( sssPath, 0,component, new IntegerComparator() );
 					ppc.addCalculation(eccentricity);
 				}
@@ -119,7 +119,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 					ppc.addCalculation(stressCentrality);
 				}
 				
-				if(doAvgSP()){
+				if(doRadiality() || doCloseness() || doAvgSP()){
 					avgSP = new AverageShortestPath<Integer>(sssPath, component);
 					ppc.addCalculation(avgSP);
 				}
@@ -151,12 +151,11 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 			}
 			
 			
-			if(doRadiality() && doEccentritity() && doAvgSP()){
+			if(doRadiality()){
 				int maxEccentricity = findMaxEccentricity(eccentricity,component);
 				radiality = new Radiality<>(maxEccentricity, avgSP);
 			}
 			
-
 			int currNodeI = 0;
 
 			for(Node node : component){
@@ -173,10 +172,6 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 					stats.put("neo_issinglenode", (edgecount==0) ? true : false);
 
 					if(edgecount == 0){
-
-						stats.put("neo_name", node.getProperty("name","unknown"));
-						stats.put("neo_betweenness", 0.0);
-						stats.put("neo_name", node.getProperty("name","unknown"));
 
 						stats.put("neo_indegree", 0);
 						stats.put("neo_outdegree", 0);
@@ -206,6 +201,9 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 						
 						if(doTopoCoeff())
 							stats.put("neo_topologicalcoeff", 0.0);
+						
+						if(doRadiality())
+							stats.put("neo_radiality", 0.0);
 
 					} else {
 						Set<Node> thisNode = new HashSet<Node>();
@@ -213,14 +211,14 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 						
 						stats.put("neo_indegree", Iterables.count(node.getRelationships(Direction.INCOMING)));
 						stats.put("neo_outdegree", Iterables.count(node.getRelationships(Direction.OUTGOING)));
-						stats.put("neo_name", node.getProperty("name","unknown"));
 						
 						if(doBetweenness())
 							stats.put("neo_betweenness", betweennessCentrality.getCentrality(node) * normFactor * 2);
 						
 						if(doStress())
 							stats.put("neo_stresscentrality", stressCentrality.getCentrality(node));
-						if(doCloseness() && doAvgSP())
+						
+						if(doCloseness())
 							stats.put("neo_closenesscentrality", (avgSP.getCentrality(node)> 0) ? (1/avgSP.getCentrality(node)) : 0.0);
 						
 						if(doEccentritity())
@@ -242,7 +240,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 						if(doTopoCoeff())
 							stats.put("neo_topologicalcoeff", topoCoeff.calcTopologicalCoeff(node));
 						
-						if(doRadiality() && doEccentritity() && doAvgSP())
+						if(doRadiality())
 							stats.put("neo_radiality", radiality.calcRadiality(node));
 
 					}
