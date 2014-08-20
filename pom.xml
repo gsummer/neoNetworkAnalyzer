@@ -4,12 +4,11 @@
 
 	<groupId>org.networklibrary</groupId>
 	<artifactId>neonetworkanalyzer</artifactId>
-	<version>0.9</version>
+	<version>1.0</version>
 	<packaging>jar</packaging>
 
-	<name>neonetworkanalyzer</name>
-	<url>http://maven.apache.org</url>
-
+	<name>neoNetworkAnalyzer</name>
+	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<neo4j>2.1.2</neo4j>
