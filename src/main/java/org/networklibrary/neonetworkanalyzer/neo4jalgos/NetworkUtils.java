@@ -1,6 +1,8 @@
 package org.networklibrary.neonetworkanalyzer.neo4jalgos;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.neo4j.graphdb.Node;
@@ -20,4 +22,16 @@ public class NetworkUtils {
 		return uniqueNeighbours;
 	}
 	
+	static public List<Relationship> getConnectingEdges(Node a, Node b){
+		
+		List<Relationship> results = new ArrayList<Relationship>();
+		
+		for(Relationship r : a.getRelationships()){
+			if(r.getOtherNode(a).equals(b)){
+				results.add(r);
+			}
+		}
+		
+		return results;
+	}
 }

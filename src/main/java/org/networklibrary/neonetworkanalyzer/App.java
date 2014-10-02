@@ -7,6 +7,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeoAnalyzerImpl;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeoAnalyzerMultiImpl;
 
 /**
  * Hardcoded test space!!
@@ -28,27 +29,23 @@ public class App
 
 		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(graphloc);
 
-		//		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphloc)
-		//				.setConfig(GraphDatabaseSettings.nodestore_mapped_memory_size,"400M")
-		//				.setConfig(GraphDatabaseSettings.relationshipstore_mapped_memory_size,"400M")
-		//				.newGraphDatabase();
-
 		for(int i = 0; i < numRuns; ++i){
 
-			System.out.println("starting to analyze:");
-			NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,false,true,false,false,false,false,false,false,false);
+
+//			NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,false,true,false,false,false,false,false,false,false);
+			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,false,true,false,false,false,false,false,false,false);
 
 			long start = System.currentTimeMillis();
 			List<String> res = analyzer.analyze(g,true);
 			long end = System.currentTimeMillis();
 			System.out.println("starting to analyze:");
+			
 			//		NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,true,true,true,true,true,true,true,true,true);
 
 			//		for(String nodeProps : res){
 			//			System.out.println(nodeProps);
 			//		}
 
-			System.out.println("duration\t" + (end - start));
 			durations.add((end-start));
 
 		}
