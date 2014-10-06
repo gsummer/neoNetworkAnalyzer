@@ -25,6 +25,7 @@ public class App
 		String graphloc = args[0];
 		int numRuns = Integer.parseInt(args[1]);
 
+
 		List<Long> durations = new ArrayList<Long>();
 
 		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(graphloc);
@@ -42,9 +43,9 @@ public class App
 			
 			//		NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,true,true,true,true,true,true,true,true,true);
 
-			//		for(String nodeProps : res){
-			//			System.out.println(nodeProps);
-			//		}
+					for(String nodeProps : res){
+						System.out.println(nodeProps);
+					}
 
 			durations.add((end-start));
 

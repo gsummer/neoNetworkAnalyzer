@@ -73,12 +73,16 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		List<String> res = new ArrayList<String>();
 
 		Map<Node,Double> betweenness = new HashMap<Node,Double>();
+		Map<Node,Long> stress = new HashMap<Node,Long>();
 
+		// split into components and prep of variables 
 		try(Transaction tx = graph.beginTx()){
 
 			for(Node n : GlobalGraphOperations.at(graph).getAllNodes()){
-				betweenness.put(n, 0.0);
+				betweenness.put(n, new Double(0.0));
+				stress.put(n, new Long(0));
 			}
+			
 
 			splitComponents(graph);
 			tx.success();
@@ -87,13 +91,14 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		System.out.println("num components: " + components.size());
 		int currComp = 0;
 
+
 		for(Set<Node> component : components){
 			System.out.println("starting with component "+ currComp +" of size: " + component.size());
 			double normFactor = computeNormFactor(component.size());
 
+			List<ShortestPathTask> spts = new ArrayList<ShortestPathTask>();
+			
 			if(component.size() > 10){
-
-				List<ShortestPathTask> spts = new ArrayList<ShortestPathTask>();
 
 				int numChunks = threadCount;
 				int chunkSize = component.size() / numChunks;
@@ -126,35 +131,42 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 				}
 
 				// merge the results
-				for(ShortestPathTask spt : spts){
-					MultiUtils.mergeIntoMap(betweenness, spt.getBetweenness());
-				}
+				
 
 			} else {
 				ShortestPathTask spt = new ShortestPathTask(component, graph);
 				try {
 					spt.call();
+					spts.add(spt);
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
+					System.out.println("failed to calculate small components path work");
 					e.printStackTrace();
+					return null;
 				}
 			}
-
-			for(Node n : component){
-				res.add(n.getId() + "\t" +betweenness.get(n) * normFactor);
+			
+			for(ShortestPathTask spt : spts){
+				MultiUtils.mergeIntoMapD(betweenness, spt.getBetweenness());
+				MultiUtils.mergeIntoMapL(stress, spt.getStress());
 			}
 
+			// collect results of the component
+			for(Node n : component){
+				res.add(n.getId() + "\t" +betweenness.get(n) * normFactor + "\t" + stress.get(n));
+			}
 
 			System.out.println("finished with component " + currComp);
 			++currComp;
 		}
 
+		// thread cleanup
 		try {
 			execService.shutdown();
 			execService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 		} catch (InterruptedException e) {
-
+			System.out.println("stopping the execService failed");
 			e.printStackTrace();
+			return null;
 		}
 
 		return res;

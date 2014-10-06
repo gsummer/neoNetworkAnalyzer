@@ -21,6 +21,7 @@ public class ShortestPathTask implements Callable<Boolean> {
 
 	private Map<Node, NodeBetweenInfo> nodeBetweenness;
 	private Map<Node,Double> betweenness;
+	private Map<Node,Long> stress;
 
 
 	public ShortestPathTask(Set<Node> starts, GraphDatabaseService graph){
@@ -29,11 +30,13 @@ public class ShortestPathTask implements Callable<Boolean> {
 
 		nodeBetweenness = new HashMap<Node,NodeBetweenInfo>();
 		betweenness = new HashMap<Node,Double>();
+		stress = new HashMap<Node,Long>();
 
 		try(Transaction tx = graph.beginTx()){
 			for(Node node : GlobalGraphOperations.at(graph).getAllNodes()){
 				nodeBetweenness.put(node, new NodeBetweenInfo(0, -1, 0.0));
 				betweenness.put(node, 0.0);
+				stress.put(node, new Long( 0));
 				tx.success();
 			}
 		}
@@ -56,6 +59,10 @@ public class ShortestPathTask implements Callable<Boolean> {
 	
 	public Map<Node,Double> getBetweenness(){
 		return betweenness;
+	}
+	
+	public Map<Node,Long> getStress() {
+		return stress;
 	}
 
 
@@ -125,8 +132,11 @@ public class ShortestPathTask implements Callable<Boolean> {
 				}
 				// accumulate node betweenness in each run
 				if (!current.equals(source)) {
-					//					currentNBInfo.addBetweenness(currentNBInfo.getDependency());
-					MultiUtils.addMappedDouble(current, currentNBInfo.getDependency(),betweenness);
+					MultiUtils.addMapped(current, currentNBInfo.getDependency(),betweenness);
+					
+					final long allSpPaths = stress.get(current).longValue();
+					stress.put(current, new Long(allSpPaths + currentNBInfo.getSPCount()
+							* currentStress));
 				}
 			}
 		}
