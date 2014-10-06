@@ -34,10 +34,10 @@ public class App
 
 
 //			NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,false,true,false,false,false,false,false,false,false);
-			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,false,true,false,false,false,false,false,false,false);
+			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true);
 
 			long start = System.currentTimeMillis();
-			List<String> res = analyzer.analyze(g,true);
+			List<String> res = analyzer.analyze(g,false);
 			long end = System.currentTimeMillis();
 			System.out.println("starting to analyze:");
 			

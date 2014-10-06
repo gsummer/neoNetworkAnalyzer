@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import org.neo4j.graphalgo.impl.centrality.Eccentricity;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -22,6 +23,8 @@ public class ShortestPathTask implements Callable<Boolean> {
 	private Map<Node, NodeBetweenInfo> nodeBetweenness;
 	private Map<Node,Double> betweenness;
 	private Map<Node,Long> stress;
+	private Map<Node,Double> avgSP;
+	private Map<Node,Long> eccentricity;
 
 
 	public ShortestPathTask(Set<Node> starts, GraphDatabaseService graph){
@@ -31,12 +34,16 @@ public class ShortestPathTask implements Callable<Boolean> {
 		nodeBetweenness = new HashMap<Node,NodeBetweenInfo>();
 		betweenness = new HashMap<Node,Double>();
 		stress = new HashMap<Node,Long>();
-
+		avgSP = new HashMap<Node,Double>();
+		eccentricity = new HashMap<Node,Long>();
+		
 		try(Transaction tx = graph.beginTx()){
 			for(Node node : GlobalGraphOperations.at(graph).getAllNodes()){
 				nodeBetweenness.put(node, new NodeBetweenInfo(0, -1, 0.0));
 				betweenness.put(node, 0.0);
 				stress.put(node, new Long( 0));
+				avgSP.put(node, 0.0);
+				eccentricity.put(node, new Long(0));
 				tx.success();
 			}
 		}
@@ -63,6 +70,14 @@ public class ShortestPathTask implements Callable<Boolean> {
 	
 	public Map<Node,Long> getStress() {
 		return stress;
+	}
+	
+	public  Map<Node,Double>  getAvgSP(){
+		return avgSP;
+	}
+	
+	public  Map<Node,Long>  getEccentricity() {
+		return eccentricity;
 	}
 
 
@@ -110,9 +125,12 @@ public class ShortestPathTask implements Callable<Boolean> {
 					}
 				}
 
+
 			}
 		}
 
+		long sumPaths = 0L;
+		long numPaths = 0L;
 		// Return nodes in order of non-increasing distance from source
 		while (!done_nodes.isEmpty()) {
 			final Node current = done_nodes.removeFirst();
@@ -137,9 +155,20 @@ public class ShortestPathTask implements Callable<Boolean> {
 					final long allSpPaths = stress.get(current).longValue();
 					stress.put(current, new Long(allSpPaths + currentNBInfo.getSPCount()
 							* currentStress));
+					
+					sumPaths += currentNBInfo.getSPLength();
+					++numPaths;
+					
+					if(currentNBInfo.getSPLength() > eccentricity.get(source)){
+						eccentricity.put(source, new Long(currentNBInfo.getSPLength()));
+					}
 				}
+				
+				
 			}
 		}
+		avgSP.put(source, sumPaths / (double)numPaths);
+		
 	}
 
 	

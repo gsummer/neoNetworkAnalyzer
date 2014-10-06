@@ -1,19 +1,21 @@
 package org.networklibrary.neonetworkanalyzer.neo4jalgos;
 
+import java.util.Map;
+
 import org.neo4j.graphdb.Node;
 
-public class Radiality<ShortestPathCostType> {
+public class RadialityMT<ShortestPathCostType> {
 
-	protected int diameter = 0;
-	protected AverageShortestPath<ShortestPathCostType> avgSP;
+	protected long diameter = 0;
+	protected Map<Node,Double> avgSP;
 	
-	public Radiality(int diameter,AverageShortestPath<ShortestPathCostType> avgSP){
+	public RadialityMT(long diameter,Map<Node,Double> avgSP){
 		this.diameter = diameter;
 		this.avgSP = avgSP;
 	}
 	
 	public double calcRadiality(Node node){
-		double asp = avgSP.getCentrality(node);
+		double asp = avgSP.get(node);
 		double rad = (diameter + 1.0 - asp) / diameter;
 		return rad;
 	}

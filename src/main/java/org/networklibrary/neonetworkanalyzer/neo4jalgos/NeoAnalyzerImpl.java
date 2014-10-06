@@ -153,7 +153,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 			
 			if(doRadiality()){
 				int maxEccentricity = findMaxEccentricity(eccentricity,component);
-				radiality = new Radiality<>(maxEccentricity, avgSP);
+				radiality = new Radiality<Integer>(maxEccentricity, avgSP);
 			}
 			
 			int currNodeI = 0;

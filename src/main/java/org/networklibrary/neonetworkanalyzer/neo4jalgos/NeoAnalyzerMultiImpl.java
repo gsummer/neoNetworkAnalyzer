@@ -18,9 +18,12 @@ import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphalgo.impl.centrality.Eccentricity;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.tooling.GlobalGraphOperations;
 import org.networklibrary.neonetworkanalyzer.NeoAnalyzer;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.mt.MultiUtils;
@@ -64,7 +67,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		// setup exec
 		threadCount = Math.min(4, Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
 		execService = Executors.newFixedThreadPool(threadCount);
-//				execService = Executors.newSingleThreadExecutor();
+		//				execService = Executors.newSingleThreadExecutor();
 		System.out.println("num threads: " + threadCount);
 
 	}
@@ -74,6 +77,8 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 
 		Map<Node,Double> betweenness = new HashMap<Node,Double>();
 		Map<Node,Long> stress = new HashMap<Node,Long>();
+		Map<Node,Double> avgSP = new HashMap<Node,Double>();
+		Map<Node,Long> eccentricity = new HashMap<Node,Long>();
 
 		// split into components and prep of variables 
 		try(Transaction tx = graph.beginTx()){
@@ -81,8 +86,10 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 			for(Node n : GlobalGraphOperations.at(graph).getAllNodes()){
 				betweenness.put(n, new Double(0.0));
 				stress.put(n, new Long(0));
+				avgSP.put(n, new Double(0.0));
+				eccentricity.put(n, new Long(0));
 			}
-			
+
 
 			splitComponents(graph);
 			tx.success();
@@ -97,7 +104,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 			double normFactor = computeNormFactor(component.size());
 
 			List<ShortestPathTask> spts = new ArrayList<ShortestPathTask>();
-			
+
 			if(component.size() > 10){
 
 				int numChunks = threadCount;
@@ -131,7 +138,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 				}
 
 				// merge the results
-				
+
 
 			} else {
 				ShortestPathTask spt = new ShortestPathTask(component, graph);
@@ -144,15 +151,152 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 					return null;
 				}
 			}
-			
+
+			// merge thread results back together
 			for(ShortestPathTask spt : spts){
 				MultiUtils.mergeIntoMapD(betweenness, spt.getBetweenness());
 				MultiUtils.mergeIntoMapL(stress, spt.getStress());
+				MultiUtils.mergeIntoMapD(avgSP, spt.getAvgSP());
+				MultiUtils.mergeIntoMapL(eccentricity, spt.getEccentricity());
 			}
 
-			// collect results of the component
-			for(Node n : component){
-				res.add(n.getId() + "\t" +betweenness.get(n) * normFactor + "\t" + stress.get(n));
+			// postprocess merged results
+
+
+
+			TopologicalCoeff topoCoeff = null;
+			RadialityMT<Integer> radiality = null;
+			ClusteringCoeff clustCoeff = null;
+			NeighbourhoodConnectivity neighbourhoodConn = null;
+			MultiEdgePairs multiEdgePairs = null;
+
+			if(doTopoCoeff()){
+				topoCoeff = new TopologicalCoeff();
+			}
+
+			if(doClusteringCoeff()){
+				clustCoeff = new ClusteringCoeff();
+			}
+
+			if(doNeighbourhoodConnectivity()){
+				neighbourhoodConn = new NeighbourhoodConnectivity();
+			}
+
+			if(doMultiEdgePairs()){
+				multiEdgePairs = new MultiEdgePairs();
+			}
+
+			if(doRadiality()){
+				long maxEccentricity = findMaxEccentricity(eccentricity,component);
+				radiality = new RadialityMT<>(maxEccentricity, avgSP);
+			}
+
+			// calculate neighbourhood stats and collect results of the component
+
+			//				res.add(n.getId() + "\t" +betweenness.get(n) * normFactor + "\t" + stress.get(n));
+
+			for(Node node : component){
+				try (Transaction tx = graph.beginTx()){
+					Map<String, Object> stats = new HashMap<String,Object>();
+
+					Iterable<Relationship> rels  = node.getRelationships();
+					long edgecount = Iterables.count(rels);
+
+					stats.put("neo_edgecount", edgecount);
+					stats.put("neo_indegree", Iterables.count(node.getRelationships(Direction.INCOMING)));
+					stats.put("neo_outdegree", Iterables.count(node.getRelationships(Direction.OUTGOING)));
+					stats.put("neo_issinglenode", (edgecount==0) ? true : false);
+
+					if(edgecount == 0){
+
+						stats.put("neo_indegree", 0);
+						stats.put("neo_outdegree", 0);
+						if(doBetweenness())
+							stats.put("neo_betweenness", 0.0);
+
+						if(doStress())
+							stats.put("neo_stresscentrality", 0.0);
+
+						if(doCloseness())
+							stats.put("neo_closenesscentrality", 0.0);
+
+						if(doEccentritity())
+							stats.put("neo_eccentriticy", 0);
+
+						if(doAvgSP())
+							stats.put("neo_avgSP", 0.0);
+
+						if(doClusteringCoeff())
+							stats.put("neo_clustcoeff", 0.0);
+
+						if(doNeighbourhoodConnectivity())
+							stats.put("neo_neighbourhoodconnectivity",0.0);
+
+						if(doMultiEdgePairs())
+							stats.put("neo_multiedgepairs",0L);
+
+						if(doTopoCoeff())
+							stats.put("neo_topologicalcoeff", 0.0);
+
+						if(doRadiality())
+							stats.put("neo_radiality", 0.0);
+
+					} else {
+						Set<Node> thisNode = new HashSet<Node>();
+						thisNode.add(node);
+
+						stats.put("neo_indegree", Iterables.count(node.getRelationships(Direction.INCOMING)));
+						stats.put("neo_outdegree", Iterables.count(node.getRelationships(Direction.OUTGOING)));
+
+						if(doBetweenness())
+							stats.put("neo_betweenness", betweenness.get(node) * normFactor);
+
+						if(doStress())
+							stats.put("neo_stresscentrality", stress.get(node));
+
+						if(doCloseness())
+							stats.put("neo_closenesscentrality", (avgSP.get(node)> 0) ? (1/avgSP.get(node)) : 0.0);
+
+						if(doEccentritity())
+							stats.put("neo_eccentriticy", eccentricity.get(node));
+
+						if(doAvgSP()){
+							stats.put("neo_avgSP", avgSP.get(node));
+						}
+
+						if(doClusteringCoeff())
+							stats.put("neo_clustcoeff", clustCoeff.calcClusteringCoeff(node));
+
+						if(doNeighbourhoodConnectivity())
+							stats.put("neo_neighbourhoodconnectivity",neighbourhoodConn.calcNeighbourhoodConnectivity(node));
+
+						if(doMultiEdgePairs())
+							stats.put("neo_multiedgepairs",multiEdgePairs.calcMultipleEdgePairs(node));
+
+						if(doTopoCoeff())
+							stats.put("neo_topologicalcoeff", topoCoeff.calcTopologicalCoeff(node));
+
+						if(doRadiality())
+							stats.put("neo_radiality", radiality.calcRadiality(node));
+
+					}
+
+					try {
+						if(saveInGraph){
+							addToGraph(node,stats,graph);
+						}
+						stats.put("nodeid", node.getId());
+						res.add(toJSON(stats));
+
+					} catch (JsonGenerationException e) {
+						e.printStackTrace();
+					} catch (JsonMappingException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					tx.success();
+				}
 			}
 
 			System.out.println("finished with component " + currComp);
@@ -190,52 +334,43 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 
 
 	private boolean doMultiEdgePairs() {
-		// TODO Auto-generated method stub
 		return multiEdgePairsFlag;
 	}
 
 
 	private boolean doNeighbourhoodConnectivity() {
-		// TODO Auto-generated method stub
 		return neighbourhoodConnFlag;
 	}
 
 
 	private boolean doTopoCoeff() {
-		// TODO Auto-generated method stub
 		return topoCoeffFlag;
 	}
 
 
 	private boolean doRadiality() {
-		// TODO Auto-generated method stub
 		return radialityFlag;
 	}
 
 
 	private boolean doAvgSP() {
-		// TODO Auto-generated method stub
 		return avgSPFlag;
 	}
 
 
 	private boolean doStress() {
-		// TODO Auto-generated method stub
 		return stressFlag;
 	}
 
 
 	private boolean doBetweenness() {
-		// TODO Auto-generated method stub
 		return betweennessFlag;
 	}
 
 
 	private boolean doEccentritity() {
-		// TODO Auto-generated method stub
 		return eccentricityFlag;
 	}
-
 
 	private void addToGraph(Node n, Map<String, Object> stats,GraphDatabaseService graph) {
 
@@ -291,10 +426,10 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 
 	}
 
-	protected int findMaxEccentricity(Eccentricity<Integer> eccentricity,Set<Node> nodes) {
-		int max = 0;
+	protected long findMaxEccentricity(Map<Node,Long> eccentricity,Set<Node> nodes) {
+		long max = 0;
 		for(Node n : nodes){
-			int eccentriticy  = eccentricity.getCentrality(n);
+			long eccentriticy  = eccentricity.get(n);
 			if(eccentriticy > max)
 				max = eccentriticy;
 		}
