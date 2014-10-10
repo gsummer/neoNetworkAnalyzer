@@ -51,9 +51,12 @@ public class ShortestPathTask implements Callable<Boolean> {
 
 	@Override
 	public Boolean call() throws Exception {
+		int i = 0;
 		for(Node current : starts){
 			try(Transaction tx = graph.beginTx()){
 				computeNB(current);
+				++i;
+				System.out.println("done with node "+ i +" of " + starts.size());
 				tx.success();
 			}
 
