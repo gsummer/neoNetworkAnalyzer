@@ -54,9 +54,11 @@ public class ShortestPathTask implements Callable<Boolean> {
 		int i = 0;
 		for(Node current : starts){
 			try(Transaction tx = graph.beginTx()){
+				long start = System.currentTimeMillis();
 				computeNB(current);
+				long end = System.currentTimeMillis();
 				++i;
-				System.out.println("done with node "+ i +" of " + starts.size());
+				System.out.println(Thread.currentThread().getId() + ": done with node "+ i +" of " + starts.size() + "after: " + (end-start) +"ms");
 				tx.success();
 			}
 
