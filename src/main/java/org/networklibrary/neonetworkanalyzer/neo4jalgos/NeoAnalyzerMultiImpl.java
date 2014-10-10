@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.neo4j.graphalgo.impl.centrality.Eccentricity;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -65,7 +64,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 
 		// decide numThreads
 		// setup exec
-		threadCount = Math.min(4, Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
+		threadCount = Math.min(16, Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
 		execService = Executors.newFixedThreadPool(threadCount);
 		//				execService = Executors.newSingleThreadExecutor();
 		System.out.println("num threads: " + threadCount);
@@ -160,10 +159,6 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 				MultiUtils.mergeIntoMapL(eccentricity, spt.getEccentricity());
 			}
 
-			// postprocess merged results
-
-
-
 			TopologicalCoeff topoCoeff = null;
 			RadialityMT<Integer> radiality = null;
 			ClusteringCoeff clustCoeff = null;
@@ -191,10 +186,6 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 				radiality = new RadialityMT<>(maxEccentricity, avgSP);
 			}
 
-			// calculate neighbourhood stats and collect results of the component
-
-			//				res.add(n.getId() + "\t" +betweenness.get(n) * normFactor + "\t" + stress.get(n));
-
 			for(Node node : component){
 				try (Transaction tx = graph.beginTx()){
 					Map<String, Object> stats = new HashMap<String,Object>();
@@ -208,7 +199,6 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 					stats.put("neo_issinglenode", (edgecount==0) ? true : false);
 
 					if(edgecount == 0){
-
 						stats.put("neo_indegree", 0);
 						stats.put("neo_outdegree", 0);
 						if(doBetweenness())
@@ -373,17 +363,13 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 	}
 
 	private void addToGraph(Node n, Map<String, Object> stats,GraphDatabaseService graph) {
-
 		try(Transaction tx = graph.beginTx()){
 			for(Entry<String,Object> e : stats.entrySet()){
 				n.setProperty(e.getKey(), e.getValue());
 			}
-
 			tx.success();
 		}
-
 	}
-
 
 	protected void splitComponents(GraphDatabaseService graph) {
 		components = new ArrayList<Set<Node>>();
@@ -447,6 +433,4 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 	protected double computeNormFactor(int count) {
 		return (count > 2) ? (1.0 / ((count - 1) * (count - 2))) : 1.0;
 	}
-
-
 }
