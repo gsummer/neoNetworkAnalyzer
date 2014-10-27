@@ -70,6 +70,32 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		System.out.println("num threads: " + threadCount);
 
 	}
+	
+	public NeoAnalyzerMultiImpl(boolean eccentricityFlag, boolean betweennessFlag,
+			boolean stressFlag, boolean avgSPFlag, boolean radialityFlag,
+			boolean topoCoeffFlag, boolean neighbourhoodConnFlag,
+			boolean multiEdgePairsFlag, boolean closenessFlag,
+			boolean clustCoeffFlag,int numThreads) {
+		super();
+		this.eccentricityFlag = eccentricityFlag;
+		this.betweennessFlag = betweennessFlag;
+		this.stressFlag = stressFlag;
+		this.avgSPFlag = avgSPFlag;
+		this.radialityFlag = radialityFlag;
+		this.topoCoeffFlag = topoCoeffFlag;
+		this.neighbourhoodConnFlag = neighbourhoodConnFlag;
+		this.multiEdgePairsFlag = multiEdgePairsFlag;
+		this.closenessFlag = closenessFlag;
+		this.clustCoeffFlag = clustCoeffFlag;
+
+		// decide numThreads
+		// setup exec
+		threadCount = numThreads;
+		execService = Executors.newFixedThreadPool(threadCount);
+		//				execService = Executors.newSingleThreadExecutor();
+		System.out.println("num threads: " + threadCount);
+
+	}
 
 	public List<String> analyze(GraphDatabaseService graph,boolean saveInGraph) {
 		List<String> res = new ArrayList<String>();

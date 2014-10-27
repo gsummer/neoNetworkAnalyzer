@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import org.neo4j.graphalgo.impl.centrality.Eccentricity;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -84,7 +83,6 @@ public class ShortestPathTask implements Callable<Boolean> {
 	public  Map<Node,Long>  getEccentricity() {
 		return eccentricity;
 	}
-
 
 	private void computeNB(Node source){
 

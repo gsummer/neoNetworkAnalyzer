@@ -156,7 +156,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 				radiality = new Radiality<Integer>(maxEccentricity, avgSP);
 			}
 			
-			int currNodeI = 0;
+//			int currNodeI = 0;
 
 			for(Node node : component){
 				//				System.out.println("starting on node finishing up: " + currNodeI + " " + node);
@@ -262,12 +262,10 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 					tx.success();
 				}
 				//				System.out.println("finished on node finishing up: " + currNodeI + " " + node);
-				++currNodeI;
+//				++currNodeI;
 			}
 			System.out.println("finished with component " + currComp);
 			++currComp;
-
-
 		}
 
 		return res;
@@ -280,55 +278,46 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 
 
 	private boolean doCloseness() {
-		// TODO Auto-generated method stub
 		return closenessFlag;
 	}
 
 
 	private boolean doMultiEdgePairs() {
-		// TODO Auto-generated method stub
 		return multiEdgePairsFlag;
 	}
 
 
 	private boolean doNeighbourhoodConnectivity() {
-		// TODO Auto-generated method stub
 		return neighbourhoodConnFlag;
 	}
 
 
 	private boolean doTopoCoeff() {
-		// TODO Auto-generated method stub
 		return topoCoeffFlag;
 	}
 
 
 	private boolean doRadiality() {
-		// TODO Auto-generated method stub
 		return radialityFlag;
 	}
 
 
 	private boolean doAvgSP() {
-		// TODO Auto-generated method stub
 		return avgSPFlag;
 	}
 
 
 	private boolean doStress() {
-		// TODO Auto-generated method stub
 		return stressFlag;
 	}
 
 
 	private boolean doBetweenness() {
-		// TODO Auto-generated method stub
 		return betweennessFlag;
 	}
 
 
 	private boolean doEccentritity() {
-		// TODO Auto-generated method stub
 		return eccentricityFlag;
 	}
 
@@ -344,7 +333,6 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 		}
 
 	}
-
 
 	protected void splitComponents(GraphDatabaseService graph) {
 		components = new ArrayList<Set<Node>>();
