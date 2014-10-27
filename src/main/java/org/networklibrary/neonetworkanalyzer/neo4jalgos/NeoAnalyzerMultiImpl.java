@@ -62,11 +62,9 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		this.closenessFlag = closenessFlag;
 		this.clustCoeffFlag = clustCoeffFlag;
 
-		// decide numThreads
-		// setup exec
-		threadCount = Math.min(16, Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
+		threadCount = Math.min(16, Math.max(1, Runtime.getRuntime().availableProcessors() - 2));
 		execService = Executors.newFixedThreadPool(threadCount);
-		//				execService = Executors.newSingleThreadExecutor();
+
 		System.out.println("num threads: " + threadCount);
 
 	}
@@ -88,11 +86,9 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		this.closenessFlag = closenessFlag;
 		this.clustCoeffFlag = clustCoeffFlag;
 
-		// decide numThreads
-		// setup exec
 		threadCount = numThreads;
 		execService = Executors.newFixedThreadPool(threadCount);
-		//				execService = Executors.newSingleThreadExecutor();
+
 		System.out.println("num threads: " + threadCount);
 
 	}
