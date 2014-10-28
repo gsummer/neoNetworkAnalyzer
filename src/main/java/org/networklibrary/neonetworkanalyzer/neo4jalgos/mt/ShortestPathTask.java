@@ -57,7 +57,7 @@ public class ShortestPathTask implements Callable<Boolean> {
 				computeNB(current);
 				long end = System.currentTimeMillis();
 				++i;
-				System.out.println(Thread.currentThread().getId() + ": done with node "+ i +" of " + starts.size() + "after: " + (end-start) +"ms");
+				System.out.println(Thread.currentThread().getId() + ": done with node "+ i +" of " + starts.size() + " after: " + (end-start) +"ms");
 				tx.success();
 			}
 

@@ -26,6 +26,7 @@ import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.tooling.GlobalGraphOperations;
 import org.networklibrary.neonetworkanalyzer.NeoAnalyzer;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.mt.MultiUtils;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.mt.NodeBetweenInfo;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.mt.ShortestPathTask;
 
 public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
@@ -68,7 +69,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		System.out.println("num threads: " + threadCount);
 
 	}
-	
+
 	public NeoAnalyzerMultiImpl(boolean eccentricityFlag, boolean betweennessFlag,
 			boolean stressFlag, boolean avgSPFlag, boolean radialityFlag,
 			boolean topoCoeffFlag, boolean neighbourhoodConnFlag,
@@ -124,61 +125,70 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 			System.out.println("starting with component "+ currComp +" of size: " + component.size());
 			double normFactor = computeNormFactor(component.size());
 
-			List<ShortestPathTask> spts = new ArrayList<ShortestPathTask>();
+			//			nodeBetweenness = new HashMap<Node,NodeBetweenInfo>();
+			//			betweenness = new HashMap<Node,Double>();
+			//			stress = new HashMap<Node,Long>();
+			//			avgSP = new HashMap<Node,Double>();
+			//			eccentricity = new HashMap<Node,Long>();
 
-			if(component.size() > 10){
+			if(doBetweenness() || doStress() || doAvgSP() || doEccentritity()){
 
-				int numChunks = threadCount;
-				int chunkSize = component.size() / numChunks;
+				List<ShortestPathTask> spts = new ArrayList<ShortestPathTask>();
 
-				Set<Node> chunk = new HashSet<Node>();
+				if(component.size() > 10){
 
-				System.out.println("chunkSize = " + chunkSize);
+					int numChunks = threadCount;
+					int chunkSize = component.size() / numChunks;
 
-				int i = chunkSize;
-				for(Node n : component){
+					Set<Node> chunk = new HashSet<Node>();
 
-					if(i == 0){
-						System.out.println("size of chunk = " + chunk.size());
-						spts.add(prepChunk(chunk, graph));
-						chunk = new HashSet<Node>();
-						i = chunkSize;
+					System.out.println("chunkSize = " + chunkSize);
+
+					int i = chunkSize;
+					for(Node n : component){
+
+						if(i == 0){
+							System.out.println("size of chunk = " + chunk.size());
+							spts.add(prepChunk(chunk, graph));
+							chunk = new HashSet<Node>();
+							i = chunkSize;
+						}
+						chunk.add(n);
+						--i;
 					}
-					chunk.add(n);
-					--i;
+					// submit the leftovers
+					System.out.println("size of chunk = " + chunk.size());
+					spts.add(prepChunk(chunk, graph));
+
+
+					try {
+						execService.invokeAll(spts);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+					// merge the results
+
+
+				} else {
+					ShortestPathTask spt = new ShortestPathTask(component, graph);
+					try {
+						spt.call();
+						spts.add(spt);
+					} catch (Exception e) {
+						System.out.println("failed to calculate small components path work");
+						e.printStackTrace();
+						return null;
+					}
 				}
-				// submit the leftovers
-				System.out.println("size of chunk = " + chunk.size());
-				spts.add(prepChunk(chunk, graph));
 
-
-				try {
-					execService.invokeAll(spts);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				// merge thread results back together
+				for(ShortestPathTask spt : spts){
+					MultiUtils.mergeIntoMapD(betweenness, spt.getBetweenness());
+					MultiUtils.mergeIntoMapL(stress, spt.getStress());
+					MultiUtils.mergeIntoMapD(avgSP, spt.getAvgSP());
+					MultiUtils.mergeIntoMapL(eccentricity, spt.getEccentricity());
 				}
-
-				// merge the results
-
-
-			} else {
-				ShortestPathTask spt = new ShortestPathTask(component, graph);
-				try {
-					spt.call();
-					spts.add(spt);
-				} catch (Exception e) {
-					System.out.println("failed to calculate small components path work");
-					e.printStackTrace();
-					return null;
-				}
-			}
-
-			// merge thread results back together
-			for(ShortestPathTask spt : spts){
-				MultiUtils.mergeIntoMapD(betweenness, spt.getBetweenness());
-				MultiUtils.mergeIntoMapL(stress, spt.getStress());
-				MultiUtils.mergeIntoMapD(avgSP, spt.getAvgSP());
-				MultiUtils.mergeIntoMapL(eccentricity, spt.getEccentricity());
 			}
 
 			TopologicalCoeff topoCoeff = null;

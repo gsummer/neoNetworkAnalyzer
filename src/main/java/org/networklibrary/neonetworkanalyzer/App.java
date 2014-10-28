@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeoAnalyzerMultiImpl;
 
 /**
@@ -27,14 +28,29 @@ public class App
 
 		List<Long> durations = new ArrayList<Long>();
 
-		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(graphloc);
+//		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(graphloc);
+		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphloc)
+				.setConfig(GraphDatabaseSettings.cache_type, "strong")
+				.newGraphDatabase();
 
 		for(int i = 0; i < numRuns; ++i){
 
 
 			//	NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,false,true,false,false,false,false,false,false,false);
 //			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true);
-			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true,numThreads);
+			
+//			boolean eccentricityFlag
+//			boolean betweennessFlag,
+//			boolean stressFlag, 
+//			boolean avgSPFlag, 
+//			boolean radialityFlag,
+//			boolean topoCoeffFlag, 
+//			boolean neighbourhoodConnFlag,
+//			boolean multiEdgePairsFlag, 
+//			boolean closenessFlag,
+//			boolean clustCoeffFlag
+			
+			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(false,true,false,false,true,true,true,true,true,true,numThreads);
 
 			long start = System.currentTimeMillis();
 			List<String> res = analyzer.analyze(g,false);
