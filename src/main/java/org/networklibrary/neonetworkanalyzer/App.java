@@ -24,8 +24,6 @@ public class App
 		int numRuns = Integer.parseInt(args[1]);
 		int numThreads = Integer.parseInt(args[2]);
 
-		numThreads = 1;
-
 		List<Long> durations = new ArrayList<Long>();
 
 //		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(graphloc);
@@ -42,12 +40,7 @@ public class App
 //		}
 //		}
 		
-		for(int i = 0; i < numRuns; ++i){
-
-
-				NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,false,true,false,false,false,false,false,false,false);
-//			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true);
-			
+		for(int i = 0; i < numRuns; ++i){			
 //			boolean eccentricityFlag
 //			boolean betweennessFlag,
 //			boolean stressFlag, 
@@ -59,6 +52,7 @@ public class App
 //			boolean closenessFlag,
 //			boolean clustCoeffFlag
 			
+			NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,true,true,false,false,false,false,false,false,false);
 //			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true,numThreads);
 
 			long start = System.currentTimeMillis();
