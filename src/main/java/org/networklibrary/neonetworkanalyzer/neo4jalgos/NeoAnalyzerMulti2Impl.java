@@ -32,7 +32,7 @@ import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.tooling.GlobalGraphOperations;
 import org.networklibrary.neonetworkanalyzer.NeoAnalyzer;
 
-public class NeoAnalyzerImpl implements NeoAnalyzer {
+public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 
 	protected List<Set<Node>> components = null;
 	private boolean eccentricityFlag;
@@ -46,7 +46,7 @@ public class NeoAnalyzerImpl implements NeoAnalyzer {
 	private boolean closenessFlag;
 	private boolean clustCoeffFlag;
 
-	public NeoAnalyzerImpl(boolean eccentricityFlag, boolean betweennessFlag,
+	public NeoAnalyzerMulti2Impl(boolean eccentricityFlag, boolean betweennessFlag,
 			boolean stressFlag, boolean avgSPFlag, boolean radialityFlag,
 			boolean topoCoeffFlag, boolean neighbourhoodConnFlag,
 			boolean multiEdgePairsFlag, boolean closenessFlag,

@@ -5,8 +5,7 @@ import java.util.List;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeoAnalyzerMultiImpl;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeoAnalyzerImpl;
 
 /**
  * Hardcoded test space!!
@@ -25,18 +24,28 @@ public class App
 		int numRuns = Integer.parseInt(args[1]);
 		int numThreads = Integer.parseInt(args[2]);
 
+		numThreads = 1;
 
 		List<Long> durations = new ArrayList<Long>();
 
 //		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(graphloc);
 		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphloc)
-				.setConfig(GraphDatabaseSettings.cache_type, "strong")
+//				.setConfig(GraphDatabaseSettings.cache_type, "strong")
 				.newGraphDatabase();
 
+//		try(Transaction tx = g.beginTx()){
+//		for(Node n : GlobalGraphOperations.at(g).getAllNodes()){
+//			
+//		}
+//		for(Relationship r : GlobalGraphOperations.at(g).getAllRelationships()){
+//			
+//		}
+//		}
+		
 		for(int i = 0; i < numRuns; ++i){
 
 
-			//	NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,false,true,false,false,false,false,false,false,false);
+				NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,false,true,false,false,false,false,false,false,false);
 //			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true);
 			
 //			boolean eccentricityFlag
@@ -50,7 +59,7 @@ public class App
 //			boolean closenessFlag,
 //			boolean clustCoeffFlag
 			
-			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(false,true,false,false,true,true,true,true,true,true,numThreads);
+//			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true,numThreads);
 
 			long start = System.currentTimeMillis();
 			List<String> res = analyzer.analyze(g,false);

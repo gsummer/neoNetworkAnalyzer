@@ -105,7 +105,9 @@ public class ShortestPathTask implements Callable<Boolean> {
 			final Set<Node> neighbors = NetworkUtils.getUniqueNeighbours(current);
 			for (Node neighbor : neighbors) {
 				final NodeBetweenInfo neighborNBInfo = nodeBetweenness.get(neighbor);
-				final List<Relationship> edges = NetworkUtils.getConnectingEdges(current, neighbor);
+				
+				List<Relationship> edges = NetworkUtils.getConnectingEdges(current, neighbor);
+				
 				final int expectSPLength = currentNBInfo.getSPLength() + 1;
 				if (neighborNBInfo.getSPLength() < 0) {
 					// Neighbor traversed for the first time
