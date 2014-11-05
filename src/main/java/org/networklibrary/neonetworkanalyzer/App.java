@@ -24,30 +24,13 @@ public class App
 		int numRuns = Integer.parseInt(args[1]);
 		int numThreads = Integer.parseInt(args[2]);
 
-		numThreads = 1;
-
 		List<Long> durations = new ArrayList<Long>();
 
-//		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabase(graphloc);
 		GraphDatabaseService g = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphloc)
 //				.setConfig(GraphDatabaseSettings.cache_type, "strong")
 				.newGraphDatabase();
-
-//		try(Transaction tx = g.beginTx()){
-//		for(Node n : GlobalGraphOperations.at(g).getAllNodes()){
-//			
-//		}
-//		for(Relationship r : GlobalGraphOperations.at(g).getAllRelationships()){
-//			
-//		}
-//		}
 		
 		for(int i = 0; i < numRuns; ++i){
-
-
-				NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,true,true,true,true,true,true,true,true,true);
-//			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true);
-			
 //			boolean eccentricityFlag
 //			boolean betweennessFlag,
 //			boolean stressFlag, 
@@ -59,6 +42,7 @@ public class App
 //			boolean closenessFlag,
 //			boolean clustCoeffFlag
 			
+			NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,true,true,false,false,false,false,false,false,false);
 //			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true,numThreads);
 
 			long start = System.currentTimeMillis();

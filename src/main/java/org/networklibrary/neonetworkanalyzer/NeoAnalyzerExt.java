@@ -41,9 +41,12 @@ public class NeoAnalyzerExt extends ServerPlugin {
 	{
 		List<String> result = null;
 
-//		NeoAnalyzer analyzer = new NeoAnalyzerMultiImpl(eccentricity,betweenness,stress,avgSP,radiality,topoCoeff,neighbourhood,multiEdgePairs,closeness,clustCoeff);
+		long start = System.currentTimeMillis();
 		NeoAnalyzer analyzer = new NeoAnalyzerImpl(eccentricity,betweenness,stress,avgSP,radiality,topoCoeff,neighbourhood,multiEdgePairs,closeness,clustCoeff);
 		result = analyzer.analyze(graph,saveInGraph);
+		long end = System.currentTimeMillis();
+		
+		System.out.println("analysis ran for " + (end - start) + " ms");
 
 		return result;
 	}
