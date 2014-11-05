@@ -87,6 +87,9 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 				tx.success();
 			}
 
+			
+			
+			
 			SingleSourceShortestPath<Integer> sssPath = new SingleSourceShortestPathDijkstra<Integer>(0, null, new CostEvaluator<Integer>(){
 				@Override
 				public Integer getCost(Relationship relationship, Direction direction) {

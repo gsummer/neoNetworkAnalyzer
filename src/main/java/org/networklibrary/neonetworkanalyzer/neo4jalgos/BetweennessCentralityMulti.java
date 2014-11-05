@@ -30,8 +30,6 @@ public class BetweennessCentralityMulti<ShortestPathCostType> extends Betweennes
     public void processShortestPaths( Node node,
         SingleSourceShortestPath<ShortestPathCostType> singleSourceShortestPath )
     {
-//		System.out.println("starting betweenness on node " + currNodeI + " " + node);
-
         // Extract predecessors and successors
         Map<Node,List<Relationship>> predecessors = singleSourceShortestPath
             .getPredecessors();
@@ -41,14 +39,11 @@ public class BetweennessCentralityMulti<ShortestPathCostType> extends Betweennes
         Map<Node,List<Relationship>> successors = Util
             .reversedPredecessors( predecessors );
         PathCounter counter = new Util.PathCounter( predecessors );
-        // Recursively update the node dependencies
+        
         getAndUpdateNodeDependency( node, true, successors, counter,
             new HashMap<Node,Double>() );
         
-
-//        System.out.println("finished betweenness on node: " + currNodeI + " " + node);
         ++currNodeI;
-        System.out.println("done with node nr: " + currNodeI);
     }
 
 	protected void filterMultiEdgePaths(Map<Node, List<Relationship>> predecessors) {
