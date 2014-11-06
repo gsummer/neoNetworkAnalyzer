@@ -33,9 +33,10 @@ public class ParallelCentralityTask implements Callable<Boolean> {
 	protected Eccentricity2<Integer> eccentricity = null;
 	protected AverageShortestPathMulti<Integer> avgSP = null;
 
-	public ParallelCentralityTask(Set<Node> chunk, GraphDatabaseService graph, boolean eccentricityFlag, boolean betweennessFlag, boolean stressFlag, boolean avgSPFlag) {
+	public ParallelCentralityTask(Set<Node> chunk,Set<Node> component, GraphDatabaseService graph, boolean eccentricityFlag, boolean betweennessFlag, boolean stressFlag, boolean avgSPFlag) {
 		this.starts = chunk;
 		this.graph = graph;
+		
 
 		RelationshipType[] types = null;
 		try (Transaction tx = graph.beginTx()){
@@ -55,22 +56,22 @@ public class ParallelCentralityTask implements Callable<Boolean> {
 		ppc = new LogParallelCentralityCalculation<Integer>(sssPath, chunk);
 
 		if(eccentricityFlag){
-			eccentricity = new Eccentricity2<Integer>( sssPath, 0,chunk, new IntegerComparator() );
+			eccentricity = new Eccentricity2<Integer>( sssPath, 0,component, new IntegerComparator() );
 			ppc.addCalculation(eccentricity);
 		}
 
 		if(betweennessFlag){
-			betweennessCentrality = new BetweennessCentralityMulti<Integer>(sssPath, chunk );
+			betweennessCentrality = new BetweennessCentralityMulti<Integer>(sssPath, component );
 			ppc.addCalculation(betweennessCentrality);
 		}
 
 		if(stressFlag){
-			stressCentrality = new StressCentrality<Integer>(sssPath, chunk );
+			stressCentrality = new StressCentrality<Integer>(sssPath, component );
 			ppc.addCalculation(stressCentrality);
 		}
 
 		if(avgSPFlag){
-			avgSP = new AverageShortestPathMulti<Integer>(sssPath, chunk);
+			avgSP = new AverageShortestPathMulti<Integer>(sssPath, component);
 			ppc.addCalculation(avgSP);
 		}
 

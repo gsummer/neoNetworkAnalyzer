@@ -77,11 +77,11 @@ ShortestPathBasedCentrality<Double, ShortestPathCostType> {
 	}
 	
 	public long getNumPaths(Node n){
-		return numPathsMap.get(n);
+		return numPathsMap.containsKey(n) ? numPathsMap.get(n) : 0L;
 	}
 	
 	public long getSumPaths(Node n){
-		return sumPathsMap.get(n);
+		return sumPathsMap.containsKey(n) ? sumPathsMap.get(n) : 0L;
 	}
 
 }

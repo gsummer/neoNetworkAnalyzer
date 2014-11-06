@@ -162,7 +162,7 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 
 						if(i == 0){
 							System.out.println("size of chunk = " + chunk.size());
-							tasks.add(prepChunk(chunk, graph));
+							tasks.add(prepChunk(chunk,component, graph));
 							chunk = new HashSet<Node>();
 							i = chunkSize;
 						}
@@ -171,9 +171,9 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 					}
 					// submit the leftovers
 					System.out.println("size of chunk = " + chunk.size());
-					tasks.add(prepChunk(chunk, graph));
+					tasks.add(prepChunk(chunk,component, graph));
 				} else {
-					ParallelCentralityTask spt = prepChunk(component, graph);
+					ParallelCentralityTask spt = prepChunk(component,component, graph);
 					tasks.add(spt);
 				}
 
@@ -190,14 +190,19 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 					
 					for(ParallelCentralityTask task : tasks){
 						// betweenness = easy :P
+						
 						MultiUtils.addMapped(n, task.getBetweennessCentrality().getCentrality(n), betweenness);
 						
 						// stress = middle :P
 						MultiUtils.addMapped(n, task.getStressCentrality().getCentrality(n), stress);
 						
-						if(task.getEccentricity().getCentrality(n) > eccentricity.get(n)){
+						Integer ecc = task.getEccentricity().getCentrality(n);
+						
+						if(ecc != null && ecc > eccentricity.get(n)){
 							eccentricity.put(n, task.getEccentricity().getCentrality(n).longValue());
 						}
+						
+						
 						
 						sum += task.getAvgSP().getSumPaths(n);
 						num += task.getAvgSP().getNumPaths(n);
@@ -408,8 +413,8 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 		return eccentricityFlag;
 	}
 
-	protected ParallelCentralityTask prepChunk(Set<Node> chunk,GraphDatabaseService graph){
-		ParallelCentralityTask pct = new ParallelCentralityTask(chunk, graph,doRadiality() || doEccentritity(), doBetweenness(), doStress(),doRadiality() || doCloseness() || doAvgSP());
+	protected ParallelCentralityTask prepChunk(Set<Node> chunk, Set<Node> component,GraphDatabaseService graph){
+		ParallelCentralityTask pct = new ParallelCentralityTask(chunk,component, graph,doRadiality() || doEccentritity(), doBetweenness(), doStress(),doRadiality() || doCloseness() || doAvgSP());
 		return pct;
 	}
 
