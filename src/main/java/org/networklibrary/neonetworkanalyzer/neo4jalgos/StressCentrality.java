@@ -4,19 +4,27 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.neo4j.graphalgo.CostAccumulator;
 import org.neo4j.graphalgo.impl.centrality.ShortestPathBasedCentrality;
 import org.neo4j.graphalgo.impl.shortestpath.SingleSourceShortestPath;
 import org.neo4j.graphalgo.impl.util.DoubleAdder;
 import org.neo4j.graphdb.Node;
 
 public class StressCentrality<ShortestPathCostType> extends
-ShortestPathBasedCentrality<Double, ShortestPathCostType> {
+ShortestPathBasedCentrality<Long, ShortestPathCostType> {
 
 	public StressCentrality(
 			SingleSourceShortestPath<ShortestPathCostType> singleSourceShortestPath,
 			Set<Node> nodeSet )
 	{
-		super( singleSourceShortestPath, new DoubleAdder(), 0.0, nodeSet );
+		super( singleSourceShortestPath, new CostAccumulator<Long>(){
+
+			@Override
+			public Long addCosts(Long c1, Long c2) {
+				return c1 + c2;
+			}
+			
+		}, 0L, nodeSet );
 	}
 
 	@Override
@@ -30,7 +38,7 @@ ShortestPathBasedCentrality<Double, ShortestPathCostType> {
 			
 			for(List<Node> path : paths){
 				for(int i = 1; i < (path.size()-1); ++i){
-					addCentralityToNode(path.get(i), 1.0);
+					addCentralityToNode(path.get(i), 1L);
 				}
 			}
 

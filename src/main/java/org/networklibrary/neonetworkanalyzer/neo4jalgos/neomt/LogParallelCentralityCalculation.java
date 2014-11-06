@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos;
+package org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt;
 
 import java.util.Set;
 
@@ -62,7 +62,7 @@ public class LogParallelCentralityCalculation<ShortestPathCostType> extends
 	            }
 	            long end = System.currentTimeMillis();
 	            ++i;
-	            System.out.println("node " + i + ": per node time: " + (end - start));
+	            System.out.println(Thread.currentThread().getId() + ": node " + i + ": per node time: " + (end - start));
 	        }
 	    }
 }

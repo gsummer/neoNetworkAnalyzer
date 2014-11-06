@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos;
+package org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,11 +25,16 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.tooling.GlobalGraphOperations;
 import org.networklibrary.neonetworkanalyzer.NeoAnalyzer;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.mt.MultiUtils;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.mt.NodeBetweenInfo;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.mt.ShortestPathTask;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.ClusteringCoeff;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.MultiEdgePairs;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeighbourhoodConnectivity;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.NetworkUtils;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.Radiality;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.TopologicalCoeff;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.cymt.MultiUtils;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.cymt.RadialityMT;
 
-public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
+public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 
 	protected List<Set<Node>> components = null;
 	private boolean eccentricityFlag;
@@ -46,7 +51,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 	private int threadCount = 2;
 	private ExecutorService execService = null;
 
-	public NeoAnalyzerMultiImpl(boolean eccentricityFlag, boolean betweennessFlag,
+	public NeoAnalyzerMulti2Impl(boolean eccentricityFlag, boolean betweennessFlag,
 			boolean stressFlag, boolean avgSPFlag, boolean radialityFlag,
 			boolean topoCoeffFlag, boolean neighbourhoodConnFlag,
 			boolean multiEdgePairsFlag, boolean closenessFlag,
@@ -67,10 +72,9 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		execService = Executors.newFixedThreadPool(threadCount);
 
 		System.out.println("num threads: " + threadCount);
-
 	}
 
-	public NeoAnalyzerMultiImpl(boolean eccentricityFlag, boolean betweennessFlag,
+	public NeoAnalyzerMulti2Impl(boolean eccentricityFlag, boolean betweennessFlag,
 			boolean stressFlag, boolean avgSPFlag, boolean radialityFlag,
 			boolean topoCoeffFlag, boolean neighbourhoodConnFlag,
 			boolean multiEdgePairsFlag, boolean closenessFlag,
@@ -91,18 +95,33 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		execService = Executors.newFixedThreadPool(threadCount);
 
 		System.out.println("num threads: " + threadCount);
-
 	}
+
 
 	public List<String> analyze(GraphDatabaseService graph,boolean saveInGraph) {
 		List<String> res = new ArrayList<String>();
 
-		Map<Node,Double> betweenness = new HashMap<Node,Double>();
-		Map<Node,Long> stress = new HashMap<Node,Long>();
-		Map<Node,Double> avgSP = new HashMap<Node,Double>();
-		Map<Node,Long> eccentricity = new HashMap<Node,Long>();
+		Map<Node,Double> betweenness = null;
+		Map<Node,Long> stress = null;
+		Map<Node,Double> avgSP = null;
+		Map<Node,Long> eccentricity = null;
+		
+		if(doBetweenness()){
+			betweenness  = new HashMap<Node,Double>();
+		}
 
-		// split into components and prep of variables 
+		if(doStress()){
+			stress = new HashMap<Node,Long>();
+		}
+
+		if(doAvgSP()){
+			avgSP = new HashMap<Node,Double>();
+		}
+
+		if(doEccentritity()){
+			eccentricity = new HashMap<Node,Long>();
+		}
+		
 		try(Transaction tx = graph.beginTx()){
 
 			for(Node n : GlobalGraphOperations.at(graph).getAllNodes()){
@@ -111,8 +130,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 				avgSP.put(n, new Double(0.0));
 				eccentricity.put(n, new Long(0));
 			}
-
-
+			
 			splitComponents(graph);
 			tx.success();
 		}
@@ -120,20 +138,15 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		System.out.println("num components: " + components.size());
 		int currComp = 0;
 
-
 		for(Set<Node> component : components){
-			System.out.println("starting with component "+ currComp +" of size: " + component.size());
-			double normFactor = computeNormFactor(component.size());
 
-			//			nodeBetweenness = new HashMap<Node,NodeBetweenInfo>();
-			//			betweenness = new HashMap<Node,Double>();
-			//			stress = new HashMap<Node,Long>();
-			//			avgSP = new HashMap<Node,Double>();
-			//			eccentricity = new HashMap<Node,Long>();
+			System.out.println("starting with component "+ currComp +" of size: " + component.size());
+
+			double normFactor = computeNormFactor(component.size());
 
 			if(doBetweenness() || doStress() || doAvgSP() || doEccentritity()){
 
-				List<ShortestPathTask> spts = new ArrayList<ShortestPathTask>();
+				List<ParallelCentralityTask> tasks = new ArrayList<ParallelCentralityTask>();
 
 				if(component.size() > 10){
 
@@ -149,7 +162,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 
 						if(i == 0){
 							System.out.println("size of chunk = " + chunk.size());
-							spts.add(prepChunk(chunk, graph));
+							tasks.add(prepChunk(chunk, graph));
 							chunk = new HashSet<Node>();
 							i = chunkSize;
 						}
@@ -158,38 +171,46 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 					}
 					// submit the leftovers
 					System.out.println("size of chunk = " + chunk.size());
-					spts.add(prepChunk(chunk, graph));
-
-
-					try {
-						execService.invokeAll(spts);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-
-					// merge the results
-
-
+					tasks.add(prepChunk(chunk, graph));
 				} else {
-					ShortestPathTask spt = new ShortestPathTask(component, graph);
-					try {
-						spt.call();
-						spts.add(spt);
-					} catch (Exception e) {
-						System.out.println("failed to calculate small components path work");
-						e.printStackTrace();
-						return null;
-					}
+					ParallelCentralityTask spt = prepChunk(component, graph);
+					tasks.add(spt);
 				}
 
-				// merge thread results back together
-				for(ShortestPathTask spt : spts){
-					MultiUtils.mergeIntoMapD(betweenness, spt.getBetweenness());
-					MultiUtils.mergeIntoMapL(stress, spt.getStress());
-					MultiUtils.mergeIntoMapD(avgSP, spt.getAvgSP());
-					MultiUtils.mergeIntoMapL(eccentricity, spt.getEccentricity());
+				try {
+					execService.invokeAll(tasks);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
+
+				for(Node n : component){
+					
+					long sum = 0L;
+					long num = 0L;
+					
+					for(ParallelCentralityTask task : tasks){
+						// betweenness = easy :P
+						MultiUtils.addMapped(n, task.getBetweennessCentrality().getCentrality(n), betweenness);
+						
+						// stress = middle :P
+						MultiUtils.addMapped(n, task.getStressCentrality().getCentrality(n), stress);
+						
+						if(task.getEccentricity().getCentrality(n) > eccentricity.get(n)){
+							eccentricity.put(n, task.getEccentricity().getCentrality(n).longValue());
+						}
+						
+						sum += task.getAvgSP().getSumPaths(n);
+						num += task.getAvgSP().getNumPaths(n);
+					}
+					
+					avgSP.put(n, sum / (double)num);
+					
+				}
+
 			}
+
+
+			// combine results
 
 			TopologicalCoeff topoCoeff = null;
 			RadialityMT<Integer> radiality = null;
@@ -215,7 +236,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 
 			if(doRadiality()){
 				long maxEccentricity = findMaxEccentricity(eccentricity,component);
-				radiality = new RadialityMT<>(maxEccentricity, avgSP);
+				radiality = new RadialityMT<Integer>(maxEccentricity, avgSP);
 			}
 
 			for(Node node : component){
@@ -231,6 +252,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 					stats.put("neo_issinglenode", (edgecount==0) ? true : false);
 
 					if(edgecount == 0){
+
 						stats.put("neo_indegree", 0);
 						stats.put("neo_outdegree", 0);
 						if(doBetweenness())
@@ -271,7 +293,7 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 						stats.put("neo_outdegree", Iterables.count(node.getRelationships(Direction.OUTGOING)));
 
 						if(doBetweenness())
-							stats.put("neo_betweenness", betweenness.get(node) * normFactor);
+							stats.put("neo_betweenness", betweenness.get(node) * normFactor * 2);
 
 						if(doStress())
 							stats.put("neo_stresscentrality", stress.get(node));
@@ -300,7 +322,6 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 
 						if(doRadiality())
 							stats.put("neo_radiality", radiality.calcRadiality(node));
-
 					}
 
 					try {
@@ -320,28 +341,21 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 					tx.success();
 				}
 			}
-
 			System.out.println("finished with component " + currComp);
 			++currComp;
 		}
 
 		// thread cleanup
-		try {
-			execService.shutdown();
-			execService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-		} catch (InterruptedException e) {
-			System.out.println("stopping the execService failed");
-			e.printStackTrace();
-			return null;
-		}
-
+				try {
+					execService.shutdown();
+					execService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+				} catch (InterruptedException e) {
+					System.out.println("stopping the execService failed");
+					e.printStackTrace();
+					return null;
+				}
+		
 		return res;
-	}
-
-
-	protected ShortestPathTask prepChunk(Set<Node> chunk,GraphDatabaseService graph){
-		ShortestPathTask spt = new ShortestPathTask(chunk, graph);
-		return spt;
 	}
 
 
@@ -394,13 +408,21 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 		return eccentricityFlag;
 	}
 
+	protected ParallelCentralityTask prepChunk(Set<Node> chunk,GraphDatabaseService graph){
+		ParallelCentralityTask pct = new ParallelCentralityTask(chunk, graph,doRadiality() || doEccentritity(), doBetweenness(), doStress(),doRadiality() || doCloseness() || doAvgSP());
+		return pct;
+	}
+
 	private void addToGraph(Node n, Map<String, Object> stats,GraphDatabaseService graph) {
+
 		try(Transaction tx = graph.beginTx()){
 			for(Entry<String,Object> e : stats.entrySet()){
 				n.setProperty(e.getKey(), e.getValue());
 			}
+
 			tx.success();
 		}
+
 	}
 
 	protected void splitComponents(GraphDatabaseService graph) {
@@ -465,4 +487,6 @@ public class NeoAnalyzerMultiImpl implements NeoAnalyzer {
 	protected double computeNormFactor(int count) {
 		return (count > 2) ? (1.0 / ((count - 1) * (count - 2))) : 1.0;
 	}
+
+
 }

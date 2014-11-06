@@ -44,6 +44,7 @@ public class App
 			
 			NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,true,true,false,false,false,false,false,false,false);
 //			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true,numThreads);
+//			NeoAnalyzerMulti2Impl analyzer = new NeoAnalyzerMulti2Impl(true,true,true,true,true,true,true,true,true,true,numThreads);
 
 			long start = System.currentTimeMillis();
 			List<String> res = analyzer.analyze(g,false);

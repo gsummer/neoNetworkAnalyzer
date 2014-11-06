@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos.mt;
+package org.networklibrary.neonetworkanalyzer.neo4jalgos.cymt;
 
 import java.util.HashMap;
 import java.util.LinkedList;

@@ -31,6 +31,8 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.tooling.GlobalGraphOperations;
 import org.networklibrary.neonetworkanalyzer.NeoAnalyzer;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt.BetweennessCentralityMulti;
+import org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt.LogParallelCentralityCalculation;
 
 public class NeoAnalyzerImpl implements NeoAnalyzer {
 

@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos;
+package org.networklibrary.neonetworkanalyzer.neo4jalgos.cymt;
 
 import java.util.Map;
 

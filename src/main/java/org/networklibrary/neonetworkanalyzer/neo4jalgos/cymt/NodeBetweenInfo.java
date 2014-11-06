@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos.mt;
+package org.networklibrary.neonetworkanalyzer.neo4jalgos.cymt;
 /*
  * #%L
  * Cytoscape NetworkAnalyzer Impl (network-analyzer-impl)

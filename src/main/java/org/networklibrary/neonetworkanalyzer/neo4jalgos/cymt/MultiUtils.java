@@ -1,8 +1,9 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos.mt;
+package org.networklibrary.neonetworkanalyzer.neo4jalgos.cymt;
 
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.neo4j.graphalgo.impl.centrality.ShortestPathBasedCentrality;
 import org.neo4j.graphdb.Node;
 
 public class MultiUtils {
@@ -28,5 +29,8 @@ public class MultiUtils {
 		}
 	}
 	
+//	static public <CentralityType, ShortestPathCostType> void mergeIntoCentralityCalc(ShortestPathBasedCentrality<CentralityType, ShortestPathCostType> target, ShortestPathBasedCentrality<CentralityType, ShortestPathCostType> toMerge ){
+//		
+//	}
 
 }

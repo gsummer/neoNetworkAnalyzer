@@ -6,7 +6,7 @@ import org.neo4j.graphdb.Node;
 
 public class NeighbourhoodConnectivity {
 
-	double calcNeighbourhoodConnectivity(Node node){
+	public double calcNeighbourhoodConnectivity(Node node){
 		
 		Set<Node> neighbours = NetworkUtils.getUniqueNeighbours(node);
 		
