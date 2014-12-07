@@ -9,7 +9,6 @@ import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
 import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeoAnalyzerImpl;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt.NeoAnalyzerMulti2Impl;
 
 public class NeoAnalyzerExt extends ServerPlugin {

@@ -29,7 +29,6 @@ import org.networklibrary.neonetworkanalyzer.neo4jalgos.ClusteringCoeff;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.MultiEdgePairs;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.NeighbourhoodConnectivity;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.NetworkUtils;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.Radiality;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.TopologicalCoeff;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.cymt.MultiUtils;
 import org.networklibrary.neonetworkanalyzer.neo4jalgos.cymt.RadialityMT;
@@ -105,7 +104,7 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 		Map<Node,Long> stress = null;
 		Map<Node,Double> avgSP = null;
 		Map<Node,Long> eccentricity = null;
-		
+
 		if(doBetweenness()){
 			betweenness  = new HashMap<Node,Double>();
 		}
@@ -121,7 +120,7 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 		if(doEccentritity()){
 			eccentricity = new HashMap<Node,Long>();
 		}
-		
+
 		try(Transaction tx = graph.beginTx()){
 
 			for(Node n : GlobalGraphOperations.at(graph).getAllNodes()){
@@ -130,7 +129,7 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 				avgSP.put(n, new Double(0.0));
 				eccentricity.put(n, new Long(0));
 			}
-			
+
 			splitComponents(graph);
 			tx.success();
 		}
@@ -157,6 +156,7 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 
 					System.out.println("chunkSize = " + chunkSize);
 
+					// make a nicer chunking
 					int i = chunkSize;
 					for(Node n : component){
 
@@ -184,39 +184,40 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 				}
 
 				for(Node n : component){
-					
+
 					long sum = 0L;
 					long num = 0L;
-					
+
 					for(ParallelCentralityTask task : tasks){
-						// betweenness = easy :P
-						
-						MultiUtils.addMapped(n, task.getBetweennessCentrality().getCentrality(n), betweenness);
-						
-						// stress = middle :P
-						MultiUtils.addMapped(n, task.getStressCentrality().getCentrality(n), stress);
-						
-						Integer ecc = task.getEccentricity().getCentrality(n);
-						
-						if(ecc != null && ecc > eccentricity.get(n)){
-							eccentricity.put(n, task.getEccentricity().getCentrality(n).longValue());
+
+						if(doBetweenness())
+							MultiUtils.addMapped(n, task.getBetweennessCentrality().getCentrality(n), betweenness);
+
+						if(doStress())
+							MultiUtils.addMapped(n, task.getStressCentrality().getCentrality(n), stress);
+
+						if(doEccentritity()){
+							Integer ecc = task.getEccentricity().getCentrality(n);
+
+							if(ecc != null && ecc > eccentricity.get(n)){
+								eccentricity.put(n, task.getEccentricity().getCentrality(n).longValue());
+							}
 						}
-						
-						
-						
-						sum += task.getAvgSP().getSumPaths(n);
-						num += task.getAvgSP().getNumPaths(n);
+
+						if(doAvgSP()){
+							sum += task.getAvgSP().getSumPaths(n);
+							num += task.getAvgSP().getNumPaths(n);
+						}
 					}
-					
-					avgSP.put(n, sum / (double)num);
-					
+
+					if(doAvgSP() && num > 0)
+						avgSP.put(n, sum / (double)num);
+
 				}
 
 			}
 
-
 			// combine results
-
 			TopologicalCoeff topoCoeff = null;
 			RadialityMT<Integer> radiality = null;
 			ClusteringCoeff clustCoeff = null;
@@ -336,6 +337,7 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 						stats.put("nodeid", node.getId());
 						res.add(toJSON(stats));
 
+						// how about actual error handling? :)
 					} catch (JsonGenerationException e) {
 						e.printStackTrace();
 					} catch (JsonMappingException e) {
@@ -346,20 +348,20 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 					tx.success();
 				}
 			}
-			System.out.println("finished with component " + currComp);
+//			System.out.println("finished with component " + currComp);
 			++currComp;
 		}
 
-		// thread cleanup
-				try {
-					execService.shutdown();
-					execService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-				} catch (InterruptedException e) {
-					System.out.println("stopping the execService failed");
-					e.printStackTrace();
-					return null;
-				}
-		
+		// thread cleanup: all tasks are done because the invokeAll blocks 
+		try {
+			execService.shutdown();
+			execService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (InterruptedException e) {
+			System.out.println("stopping the execService failed");
+			e.printStackTrace();
+			return null;
+		}
+
 		return res;
 	}
 
@@ -383,31 +385,25 @@ public class NeoAnalyzerMulti2Impl implements NeoAnalyzer {
 		return neighbourhoodConnFlag;
 	}
 
-
 	private boolean doTopoCoeff() {
 		return topoCoeffFlag;
 	}
-
 
 	private boolean doRadiality() {
 		return radialityFlag;
 	}
 
-
 	private boolean doAvgSP() {
 		return avgSPFlag;
 	}
-
 
 	private boolean doStress() {
 		return stressFlag;
 	}
 
-
 	private boolean doBetweenness() {
 		return betweennessFlag;
 	}
-
 
 	private boolean doEccentritity() {
 		return eccentricityFlag;

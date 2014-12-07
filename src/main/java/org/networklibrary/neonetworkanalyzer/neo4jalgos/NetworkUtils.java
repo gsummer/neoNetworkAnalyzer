@@ -21,7 +21,7 @@ public class NetworkUtils {
 		
 		return uniqueNeighbours;
 	}
-	
+		
 	static public List<Relationship> getConnectingEdges(Node a, Node b){
 		
 		List<Relationship> results = new ArrayList<Relationship>();

@@ -8,7 +8,8 @@ import org.neo4j.graphdb.Node;
 public class MultiUtils {
 
 	static public void addMapped(Node n, Double value, Map<Node,Double> target){
-		target.put(n, target.get(n) + value);
+		if(target != null)
+			target.put(n, target.get(n) + value);
 		
 	}
 	
