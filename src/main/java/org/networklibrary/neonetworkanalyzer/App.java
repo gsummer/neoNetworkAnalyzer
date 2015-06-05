@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt.NeoAnalyzerMulti2Impl;
+import org.networklibrary.neonetworkanalyzer.implMT.NeoAnalyzerImplMT;
 
 /**
  * Hardcoded test space!!
@@ -42,18 +42,16 @@ public class App
 //			boolean closenessFlag,
 //			boolean clustCoeffFlag
 			
-//			NeoAnalyzerImpl analyzer = new NeoAnalyzerImpl(true,true,true,true,true,true,true,true,true,true);
-//			NeoAnalyzerMultiImpl analyzer = new NeoAnalyzerMultiImpl(true,true,true,true,true,true,true,true,true,true,numThreads);
-			NeoAnalyzerMulti2Impl analyzer = new NeoAnalyzerMulti2Impl(true,true,true,true,true,true,true,true,true,true,numThreads);
+			NeoAnalyzerImplMT analyzer = new NeoAnalyzerImplMT(true,true,true,true,true,true,true,true,true,true,numThreads);
 
 			long start = System.currentTimeMillis();
 			List<String> res = analyzer.analyze(g,false);
 			long end = System.currentTimeMillis();
 			System.out.println("starting to analyze:");
 			
-			for(String nodeProps : res){
-				System.out.println(nodeProps);
-			}
+//			for(String nodeProps : res){
+//				System.out.println(nodeProps);
+//			}
 
 			durations.add((end-start));
 		}

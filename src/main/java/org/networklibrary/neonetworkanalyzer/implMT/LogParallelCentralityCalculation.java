@@ -1,14 +1,19 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt;
+package org.networklibrary.neonetworkanalyzer.implMT;
 
 import java.util.Set;
 
 import org.neo4j.graphalgo.impl.centrality.ParallellCentralityCalculation;
 import org.neo4j.graphalgo.impl.centrality.ShortestPathBasedCentrality;
 import org.neo4j.graphalgo.impl.shortestpath.SingleSourceShortestPath;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 
+/*
+ * just adding a progress sysout
+ */
 public class LogParallelCentralityCalculation<ShortestPathCostType> extends
 		ParallellCentralityCalculation<ShortestPathCostType> {
+
 
 	public LogParallelCentralityCalculation(
 	        SingleSourceShortestPath<ShortestPathCostType> singleSourceShortestPath,
@@ -62,7 +67,7 @@ public class LogParallelCentralityCalculation<ShortestPathCostType> extends
 	            }
 	            long end = System.currentTimeMillis();
 	            ++i;
-	            System.out.println(Thread.currentThread().getId() + ": node " + i + ": per node time: " + (end - start));
+	            System.out.println(Thread.currentThread().getId() + ": node " + i + ": per node time: " + (end - start) + " [neoid: "+startNode.getId()+", degree: "+startNode.getDegree(Direction.BOTH)+" ]");
 	        }
 	    }
 }

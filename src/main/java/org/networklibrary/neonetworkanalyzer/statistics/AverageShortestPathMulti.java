@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt;
+package org.networklibrary.neonetworkanalyzer.statistics;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,7 +10,7 @@ import org.neo4j.graphalgo.impl.centrality.ShortestPathBasedCentrality;
 import org.neo4j.graphalgo.impl.shortestpath.SingleSourceShortestPath;
 import org.neo4j.graphalgo.impl.util.DoubleAdder;
 import org.neo4j.graphdb.Node;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.cymt.MultiUtils;
+import org.networklibrary.neonetworkanalyzer.implMT.MultiUtils;
 
 public class AverageShortestPathMulti<ShortestPathCostType> extends
 ShortestPathBasedCentrality<Double, ShortestPathCostType> {

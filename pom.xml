@@ -4,14 +4,14 @@
 
 	<groupId>org.networklibrary</groupId>
 	<artifactId>neonetworkanalyzer</artifactId>
-	<version>1.0</version>
+	<version>1.1dev</version>
 	<packaging>jar</packaging>
 
 	<name>neoNetworkAnalyzer</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<neo4j>2.1.3</neo4j>
+		<neo4j>2.2.0</neo4j>
 	</properties>
 
 	<build>

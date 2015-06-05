@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos;
+package org.networklibrary.neonetworkanalyzer.statistics;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,10 +20,10 @@ public class TopologicalCoeff {
 			Set<Node> currentComNeNodes = NetworkUtils.getUniqueNeighbours(nb);
 			for (final Node n : currentComNeNodes) {
 				if (!n.equals(node)) {
-					tc++;
+					++tc;
 					if (comNeNodes.add(n)) {
 						if (neighbours.contains(n)) {
-							tc++;
+							++tc;
 						}
 					}
 				}

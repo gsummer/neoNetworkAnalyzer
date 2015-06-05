@@ -9,7 +9,7 @@ import org.neo4j.server.plugins.Parameter;
 import org.neo4j.server.plugins.PluginTarget;
 import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt.NeoAnalyzerMulti2Impl;
+import org.networklibrary.neonetworkanalyzer.implMT.NeoAnalyzerImplMT;
 
 public class NeoAnalyzerExt extends ServerPlugin {
 	@Name( "neonetworkanalyzer" )
@@ -42,7 +42,7 @@ public class NeoAnalyzerExt extends ServerPlugin {
 		List<String> result = null;
 
 		long start = System.currentTimeMillis();
-		NeoAnalyzer analyzer = new NeoAnalyzerMulti2Impl(eccentricity,betweenness,stress,avgSP,radiality,topoCoeff,neighbourhood,multiEdgePairs,closeness,clustCoeff);
+		NeoAnalyzer analyzer = new NeoAnalyzerImplMT(eccentricity,betweenness,stress,avgSP,radiality,topoCoeff,neighbourhood,multiEdgePairs,closeness,clustCoeff);
 		result = analyzer.analyze(graph,saveInGraph);
 		long end = System.currentTimeMillis();
 		

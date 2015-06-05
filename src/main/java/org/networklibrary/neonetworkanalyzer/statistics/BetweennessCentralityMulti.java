@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt;
+package org.networklibrary.neonetworkanalyzer.statistics;
 
 import java.util.HashMap;
 import java.util.HashSet;

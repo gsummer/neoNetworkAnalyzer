@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos.cymt;
+package org.networklibrary.neonetworkanalyzer.statistics;
 
 import java.util.Map;
 
@@ -15,6 +15,10 @@ public class RadialityMT<ShortestPathCostType> {
 	}
 	
 	public double calcRadiality(Node node){
+		if(diameter == 0){
+			return 0.0;
+		}
+		
 		double asp = avgSP.get(node);
 		double rad = (diameter + 1.0 - asp) / diameter;
 		return rad;

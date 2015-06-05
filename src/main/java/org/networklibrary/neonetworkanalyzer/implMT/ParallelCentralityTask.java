@@ -1,4 +1,4 @@
-package org.networklibrary.neonetworkanalyzer.neo4jalgos.neomt;
+package org.networklibrary.neonetworkanalyzer.implMT;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -18,8 +18,10 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.tooling.GlobalGraphOperations;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.Eccentricity2;
-import org.networklibrary.neonetworkanalyzer.neo4jalgos.StressCentrality;
+import org.networklibrary.neonetworkanalyzer.statistics.AverageShortestPathMulti;
+import org.networklibrary.neonetworkanalyzer.statistics.BetweennessCentralityMulti;
+import org.networklibrary.neonetworkanalyzer.statistics.Eccentricity2;
+import org.networklibrary.neonetworkanalyzer.statistics.StressCentrality;
 
 public class ParallelCentralityTask implements Callable<Boolean> {
 
