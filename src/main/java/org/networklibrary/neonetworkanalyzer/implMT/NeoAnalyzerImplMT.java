@@ -47,7 +47,7 @@ public class NeoAnalyzerImplMT implements NeoAnalyzer {
 	private boolean clustCoeffFlag;
 
 	private int threadCount = 2;
-	private int chunksPerThread = 1;
+	private int chunksPerThread = 3;
 	private ExecutorService execService = null;
 
 	public NeoAnalyzerImplMT(boolean eccentricityFlag, boolean betweennessFlag,
@@ -154,14 +154,14 @@ public class NeoAnalyzerImplMT implements NeoAnalyzer {
 
 					Set<Node> chunk = new HashSet<Node>();
 
-					System.out.println("chunkSize = " + chunkSize);
+//					System.out.println("chunkSize = " + chunkSize);
 
 					// make a nicer chunking
 					int i = chunkSize;
 					for(Node n : component){
 
 						if(i == 0){
-							System.out.println("size of chunk = " + chunk.size());
+//							System.out.println("size of chunk = " + chunk.size());
 							tasks.add(prepChunk(chunk,component, graph));
 							chunk = new HashSet<Node>();
 							i = chunkSize;
@@ -170,7 +170,7 @@ public class NeoAnalyzerImplMT implements NeoAnalyzer {
 						--i;
 					}
 					// submit the leftovers
-					System.out.println("size of chunk = " + chunk.size());
+//					System.out.println("size of chunk = " + chunk.size());
 					tasks.add(prepChunk(chunk,component, graph));
 				} else {
 					ParallelCentralityTask spt = prepChunk(component,component, graph);

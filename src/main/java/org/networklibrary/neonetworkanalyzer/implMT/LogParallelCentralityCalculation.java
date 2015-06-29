@@ -55,7 +55,7 @@ public class LogParallelCentralityCalculation<ShortestPathCostType> extends
 	        int i = 0;
 	        for ( Node startNode : nodeSet )
 	        {
-	        	long start = System.currentTimeMillis();
+//	        	long start = System.currentTimeMillis();
 	            // Prepare the singleSourceShortestPath
 	            singleSourceShortestPath.reset();
 	            singleSourceShortestPath.setStartNode( startNode );
@@ -65,9 +65,9 @@ public class LogParallelCentralityCalculation<ShortestPathCostType> extends
 	                calculation.processShortestPaths( startNode,
 	                    singleSourceShortestPath );
 	            }
-	            long end = System.currentTimeMillis();
+//	            long end = System.currentTimeMillis();
 	            ++i;
-	            System.out.println(Thread.currentThread().getId() + ": node " + i + ": per node time: " + (end - start) + " [neoid: "+startNode.getId()+", degree: "+startNode.getDegree(Direction.BOTH)+" ]");
+//	            System.out.println(Thread.currentThread().getId() + ": node " + i + ": per node time: " + (end - start) + " [neoid: "+startNode.getId()+", degree: "+startNode.getDegree(Direction.BOTH)+" ]");
 	        }
 	    }
 }

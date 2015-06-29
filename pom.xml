@@ -4,7 +4,7 @@
 
 	<groupId>org.networklibrary</groupId>
 	<artifactId>neonetworkanalyzer</artifactId>
-	<version>1.1dev</version>
+	<version>1.1</version>
 	<packaging>jar</packaging>
 
 	<name>neoNetworkAnalyzer</name>
